@@ -47,7 +47,7 @@ def register_error_handlers(app):
     @app.errorhandler(Conflito)
     def _conflito(e):
         db.session.rollback()
-        return api_error(409, e.message)
+        return api_error(409, e.message, e.details)
 
     @app.errorhandler(HTTPException)
     def _http_exception(e):

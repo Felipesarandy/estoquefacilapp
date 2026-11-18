@@ -107,8 +107,97 @@ def test_exige_token(client, admin, haras):
     assert client.get(f"{CATEGORIES}/{haras['category'].id}").status_code == 401
 
 
-def test_nao_existe_delete(client, admin, haras, auth_headers):
+# --- DELETE ---------------------------------------------------------------
+
+def _criar_categoria(client, headers, nome="Vazia"):
+    return client.post(CATEGORIES, json={"name": nome}, headers=headers).get_json()["id"]
+
+
+def test_admin_exclui_categoria_vazia(client, admin, db, auth_headers):
+    from app.models import AuditLog
+
+    headers = auth_headers("admin@teste.com", "admin12345")
+    categoria_id = _criar_categoria(client, headers)
+
+    resposta = client.delete(f"{CATEGORIES}/{categoria_id}", headers=headers)
+
+    assert resposta.status_code == 204
+    assert resposta.data == b""
+    assert client.get(f"{CATEGORIES}/{categoria_id}", headers=headers).status_code == 404
+    nomes = [c["name"] for c in client.get(CATEGORIES, headers=headers).get_json()["items"]]
+    assert "Vazia" not in nomes
+
+    log = db.session.query(AuditLog).filter_by(
+        action="delete", entity="category", entity_id=categoria_id).one()
+    assert log.before_json["name"] == "Vazia"
+    assert log.after_json is None
+    assert log.user_id == admin.id
+    assert log.stable_id == admin.stable_id
+
+
+def test_categoria_com_produto_ativo_e_409(client, admin, haras, auth_headers):
+    headers = auth_headers("admin@teste.com", "admin12345")
+
+    resposta = client.delete(f"{CATEGORIES}/{haras['category'].id}", headers=headers)
+    erro = resposta.get_json()["error"]
+
+    assert resposta.status_code == 409
+    assert erro["status"] == 409
+    assert erro["message"] == "Categoria possui 1 produto(s) vinculado(s) e não pode ser excluída."
+    assert erro["details"] == {"product_count": 1}
+    assert client.get(f"{CATEGORIES}/{haras['category'].id}", headers=headers).status_code == 200
+
+
+def test_categoria_so_com_produto_inativo_continua_409(client, admin, haras, db, auth_headers):
+    haras["product"].active = False
+    db.session.commit()
+
     resposta = client.delete(f"{CATEGORIES}/{haras['category'].id}",
                              headers=auth_headers("admin@teste.com", "admin12345"))
 
-    assert resposta.status_code == 405
+    assert resposta.status_code == 409
+    assert resposta.get_json()["error"]["details"] == {"product_count": 1}
+
+
+def test_409_nao_cria_auditoria_de_exclusao(client, admin, haras, db, auth_headers):
+    from app.models import AuditLog
+
+    client.delete(f"{CATEGORIES}/{haras['category'].id}",
+                  headers=auth_headers("admin@teste.com", "admin12345"))
+
+    assert db.session.query(AuditLog).filter_by(action="delete").count() == 0
+
+
+def test_tratador_nao_exclui(client, admin, tratador, haras, auth_headers):
+    headers = auth_headers("admin@teste.com", "admin12345")
+    categoria_id = _criar_categoria(client, headers)
+
+    resposta = client.delete(f"{CATEGORIES}/{categoria_id}",
+                             headers=auth_headers("tratador@teste.com", "tratador123"))
+
+    assert resposta.status_code == 403
+    assert client.get(f"{CATEGORIES}/{categoria_id}", headers=headers).status_code == 200
+
+
+def test_exclusao_sem_token_e_401(client, haras):
+    assert client.delete(f"{CATEGORIES}/{haras['category'].id}").status_code == 401
+
+
+def test_exclusao_de_id_inexistente_e_404(client, admin, auth_headers):
+    resposta = client.delete(f"{CATEGORIES}/9999",
+                             headers=auth_headers("admin@teste.com", "admin12345"))
+
+    assert resposta.status_code == 404
+
+
+def test_exclusao_de_categoria_de_outro_haras_e_404(client, admin, outro_haras, db, auth_headers):
+    from app.models import Category
+
+    alheia = Category(stable=outro_haras["stable"], name="Alheia")
+    db.session.add(alheia)
+    db.session.commit()
+
+    resposta = client.delete(f"{CATEGORIES}/{alheia.id}",
+                             headers=auth_headers("admin@teste.com", "admin12345"))
+
+    assert resposta.status_code == 404

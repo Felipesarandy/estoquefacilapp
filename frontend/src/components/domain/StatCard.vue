@@ -9,6 +9,7 @@ const props = defineProps({
   tone: { type: String, default: '' }, // slate | emerald | amber | orange | red | sky (vazio = sem destaque)
   to: { type: [String, Object], default: null }, // se informado, o cartão vira link
   loading: Boolean,
+  active: Boolean, // destaca o cartão (ex.: filtro selecionado)
 })
 
 const tones = {
@@ -36,9 +37,11 @@ const bindings = computed(() => (props.to ? { to: props.to } : {}))
     :is="tag"
     v-bind="bindings"
     :aria-busy="loading || undefined"
+    :aria-current="active ? 'true' : undefined"
     class="block rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
     :class="[
       tones[tone],
+      active && 'ring-2 ring-emerald-600',
       to && 'transition hover:shadow-md hover:ring-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600',
     ]"
   >

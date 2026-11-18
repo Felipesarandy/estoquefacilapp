@@ -1,5 +1,5 @@
 EstoqueFacil - o que mudou (avisos para o grupo)
-Atualizado em 17/11/2026
+Atualizado em 18/11/2026
 
 1. Backend unificado em backend/. A API da pasta estoquefacil-feature-backend
    esta sendo portada para la, adaptada ao haras. A pasta do feature serve so
@@ -65,3 +65,16 @@ Atualizado em 17/11/2026
       ficado sem JWT_SECRET_KEY e gerava aviso de chave curta no login).
     - Ambiente virtual padronizado como .venv (README da raiz atualizado).
     - +4 testes (306 no total).
+
+18. Exclusao de categorias (DELETE /api/categories/<id>), somente pelo admin.
+    - Regra: se a categoria tiver produtos vinculados (ativos ou inativos),
+      a API recusa com erro 409 e a tela mostra o motivo; se estiver vazia,
+      e excluida de verdade (204).
+    - A exclusao e registrada na auditoria (acao "delete", com os dados
+      da categoria antes de apagar).
+    - As demais entidades (produtos, usuarios, fornecedores, movimentacoes)
+      continuam sem DELETE; produtos e usuarios seguem com desativacao
+      (PATCH active=false).
+    - No frontend, o botao Excluir aparece apenas para o admin.
+    - Nao ha migracao nova: quem tem o banco local antigo so precisa rodar
+      `flask seed --force` (opcional, para recriar os dados de demonstracao).

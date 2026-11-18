@@ -83,7 +83,7 @@ várias instâncias (uma por teste, com banco em memória).
 
 Cada recurso tem um módulo em `app/api/` com seu `Blueprint`; todos são
 pendurados no blueprint `api` (prefixo `/api`) em `app/api/__init__.py`.
-São 36 rotas (lista completa em [API.md](API.md)).
+São 37 rotas (lista completa em [API.md](API.md)).
 
 ## Segurança
 

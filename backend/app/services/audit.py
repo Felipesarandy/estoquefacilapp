@@ -101,6 +101,11 @@ def registrar_alteracao(user, entity, model, antes, extra=None):
                   before=antes, after=depois)
 
 
+def registrar_exclusao(user, entity, entity_id, antes):
+    """Audita a exclusão física: before = dados removidos, after = nulo (sem commit)."""
+    return record(user, "delete", entity, entity_id, before=antes, after=None)
+
+
 def consultar(stable_id, action=None, entity=None, entity_id=None,
               user_id=None, inicio=None, fim=None):
     """Query da trilha do haras, mais recentes primeiro.
@@ -137,5 +142,6 @@ __all__ = [
     "acao_de_alteracao",
     "registrar_criacao",
     "registrar_alteracao",
+    "registrar_exclusao",
     "consultar",
 ]

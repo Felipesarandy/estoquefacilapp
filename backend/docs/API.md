@@ -1,12 +1,13 @@
 # API REST — EstoqueFácil (haras)
 
-Base: `http://localhost:5000/api` · formato: JSON (UTF-8) · 36 rotas
+Base: `http://localhost:5000/api` · formato: JSON (UTF-8) · 37 rotas
 (lista conferida com `flask routes`).
 
 ## Convenções
 
 - **Recursos no plural** (`/api/products`), verbos `GET`, `POST`, `PATCH`.
-  Não há `PUT`. `DELETE` não existe em nenhum recurso: cadastros são
+  Não há `PUT`. `DELETE` existe **só** em `/api/categories/<id>` (exceção,
+  com as regras da seção de categorias); nos demais recursos os cadastros são
   desativados (`PATCH {"active": false}`) e movimentações, contagens,
   incidentes e auditoria são imutáveis ou encerrados pelo ciclo de vida.
   Método não suportado → **405**.
@@ -129,6 +130,7 @@ O token carrega `sub` (id do usuário) e as claims `role` e `stable_id`.
 | POST | `/api/categories` | admin_required | `name` | 201, 409, 422 |
 | GET | `/api/categories/<id>` | login_required | — | 200, 404 |
 | PATCH | `/api/categories/<id>` | admin_required | `name` | 200, 404, 409, 422 |
+| DELETE | `/api/categories/<id>` | admin_required | — | 204, 401, 403, 404, 409 |
 | GET | `/api/suppliers` | login_required | `page`, `per_page`, `?search=` | 200 |
 | POST | `/api/suppliers` | admin_required | `name`, `phone`, `email` | 201, 409, 422 |
 | GET | `/api/suppliers/<id>` | login_required | — | 200, 404 |
@@ -136,6 +138,19 @@ O token carrega `sub` (id do usuário) e as claims `role` e `stable_id`.
 
 Nome único dentro do haras (comparação sem diferenciar maiúsculas) → 409.
 Exemplo de item: `{"id": 1, "name": "Ração", "stable_id": 1}`.
+
+**Excluir categoria** (`DELETE /api/categories/<id>`, só admin): exclusão física,
+permitida apenas se nenhum produto, **ativo ou inativo**, usar a categoria.
+Sucesso → **204** sem corpo. Com produtos vinculados → **409**:
+
+```json
+{"error": {"status": 409, "message": "Categoria possui 2 produto(s) vinculado(s) e não pode ser excluída.", "details": {"product_count": 2}}}
+```
+
+Tratador → 403; sem token → 401; id inexistente ou de outro haras → 404. A
+verificação é feita no serviço (não depende de chave estrangeira do banco).
+A exclusão é auditada (`action: delete`, `before_json` = categoria removida,
+`after_json` = nulo). Fornecedores continuam sem DELETE.
 
 ## Insumos — `/api/products`
 
@@ -310,7 +325,7 @@ Exemplo `GET /api/incidents/summary`:
 | GET | `/api/audit/<id>` | — | 200, 403, 404 |
 
 Mais recentes primeiro. `action` ∈ `login, login_failed, create, update,
-deactivate, movement, inventory, incident`; `entity` ∈ `user, category,
+deactivate, delete, movement, inventory, incident`; `entity` ∈ `user, category,
 supplier, product, movement, inventory_count, incident`. Escrita pela API →
 405; alteração pelo ORM → erro (registro imutável).
 

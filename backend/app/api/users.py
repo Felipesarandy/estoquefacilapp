@@ -1,7 +1,7 @@
 """Usuários do haras: admin e tratador (/api/users).
 
 Todas as rotas exigem um admin e trabalham apenas dentro do
-Stable (haras) desse admin. Não há DELETE: a baixa é lógica (`active`).
+Stable (haras) desse admin. Não há DELETE (só categorias têm): a baixa é lógica (`active`).
 """
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError

@@ -10,7 +10,7 @@ final. Ela usa práticas do ITIL 4 que fazem sentido num estoque de haras.
 |---|---|---|
 | **Gestão de Incidentes** | Entidade `Incident` com tipo, severidade, responsável, resolução e ciclo de vida (`aberto → em_analise → resolvido → fechado`). Abertura manual por qualquer usuário; triagem e encerramento pelo admin. | `app/models/incident.py`, `app/services/incidents.py`, `/api/incidents` |
 | **Monitoramento e Gestão de Eventos** | Os alertas de quebra de estoque são os eventos monitorados: cada insumo é classificado em `ruptura`, `critico`, `atencao` ou `ok`. O evento mais grave (saldo zerado) vira incidente de ruptura automaticamente, e é resolvido sozinho quando a reposição é registrada. | `app/services/alerts.py`, `/api/alerts`, `/api/dashboard`, `incidents.sincronizar_ruptura` |
-| **Rastreabilidade (controle de mudanças / auditoria)** | `AuditLog` imutável: quem (usuário), o quê (`action`, `entity`, `entity_id`), quando (`created_at`), de onde (`ip`) e o antes/depois em JSON. Cobre login e login falho, cadastros (create/update/deactivate), movimentações, inventário e incidentes. Não pode ser alterado nem apagado. | `app/models/audit_log.py`, `app/services/audit.py`, `/api/audit` |
+| **Rastreabilidade (controle de mudanças / auditoria)** | `AuditLog` imutável: quem (usuário), o quê (`action`, `entity`, `entity_id`), quando (`created_at`), de onde (`ip`) e o antes/depois em JSON. Cobre login e login falho, cadastros (create/update/deactivate), exclusão de categoria (delete), movimentações, inventário e incidentes. Não pode ser alterado nem apagado. | `app/models/audit_log.py`, `app/services/audit.py`, `/api/audit` |
 | **Gestão de Ativos / Configuração (inventário)** | Contagem física (`InventoryCount`, imutável) comparada ao saldo do sistema. A diferença é corrigida por uma movimentação de ajuste rastreável e gera incidente de divergência. | `app/services/inventory.py`, `/api/inventory` |
 | **Medição e Relatórios** | Contagem de incidentes por status e por tipo e tempo médio de resolução; incidentes ativos no painel; registro diário de entradas e saídas. | `/api/incidents/summary`, `/api/dashboard`, `/api/movements/daily` |
 
@@ -62,6 +62,7 @@ stateDiagram-v2
 | Contagem com diferença | Movimentação `ajuste` + incidente `divergencia_inventario` + `AuditLog` `inventory` |
 | Login / login falho | `AuditLog` `login` / `login_failed` (falho com e-mail desconhecido fica sem haras) |
 | Create / update / deactivate de usuário, categoria, fornecedor e insumo | `AuditLog` com `before_json` / `after_json` (sem senha) |
+| Exclusão de categoria (só admin, só sem produtos) | `AuditLog` `delete` com `before_json` = categoria removida e `after_json` nulo |
 | Abertura e mudança de incidente | `AuditLog` `incident` com antes/depois |
 
 ## Suposições a confirmar com o professor

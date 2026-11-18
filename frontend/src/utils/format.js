@@ -61,3 +61,8 @@ export function formatDayMonth(iso) {
   const [, month, day] = iso.split('-')
   return `${day}/${month}`
 }
+
+/** Hora (HH:mm) no fuso America/Sao_Paulo. */
+export function formatTime(date = new Date()) {
+  return date.toLocaleTimeString('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
+}

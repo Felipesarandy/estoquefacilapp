@@ -8,9 +8,10 @@ uns aos outros em círculo. A API converte todos em 409.
 class Conflito(Exception):
     """Operação válida, mas impossível no estado atual (vira 409 na API)."""
 
-    def __init__(self, message):
+    def __init__(self, message, details=None):
         super().__init__(message)
         self.message = message
+        self.details = details
 
 
 class ConflitoDeEstoque(Conflito):

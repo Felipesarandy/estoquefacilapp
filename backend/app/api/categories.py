@@ -1,8 +1,8 @@
 """Categorias de insumo (/api/categories).
 
-Leitura para qualquer usuário logado; criação e edição só para admin.
-A tabela não tem coluna de ativação, então não há DELETE: categoria
-com insumos continua existindo.
+Leitura para qualquer usuário logado; criação, edição e exclusão só para admin.
+A tabela não tem coluna de ativação: a categoria é excluída de verdade,
+mas só quando não tem nenhum insumo (ativo ou inativo) vinculado.
 """
 from flask import Blueprint, jsonify
 from sqlalchemy.exc import IntegrityError
@@ -18,7 +18,14 @@ from app.schemas.categories import (
 )
 from app.schemas.common import body, pagination_args, paginated, search_arg
 from app.services import audit
-from app.services.catalog import do_haras, listar_por_nome, nome_em_uso, pagina
+from app.services.catalog import (
+    contar_produtos_da_categoria,
+    do_haras,
+    listar_por_nome,
+    nome_em_uso,
+    pagina,
+)
+from app.services.exceptions import Conflito
 
 bp = Blueprint("categories", __name__, url_prefix="/categories")
 
@@ -94,3 +101,38 @@ def update_category(user, category_id):
         return api_error(409, "Categoria já cadastrada")
 
     return jsonify(serialize_category(item)), 200
+
+
+def _produtos_vinculados(quantidade):
+    return Conflito(
+        f"Categoria possui {quantidade} produto(s) vinculado(s) e não pode ser excluída.",
+        details={"product_count": quantidade},
+    )
+
+
+@bp.delete("/<int:category_id>")
+@admin_required
+def delete_category(user, category_id):
+    """Exclui a categoria, desde que nenhum produto (ativo ou inativo) a use."""
+    item = do_haras(Category, category_id, user.stable_id)
+
+    if item is None:
+        return api_error(404, "Categoria não encontrada")
+
+    # Checagem explícita: não depende de o banco aplicar chaves estrangeiras.
+    vinculados = contar_produtos_da_categoria(item.id)
+    if vinculados:
+        raise _produtos_vinculados(vinculados)
+
+    antes = audit.snapshot(item)
+    db.session.delete(item)
+    audit.registrar_exclusao(user, "category", category_id, antes)
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        # Um produto foi vinculado entre a checagem e o commit.
+        db.session.rollback()
+        raise _produtos_vinculados(contar_produtos_da_categoria(category_id)) from None
+
+    return "", 204

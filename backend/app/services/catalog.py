@@ -62,6 +62,11 @@ def validar_vinculos(stable_id, category_id=None, supplier_id=None):
         )
 
 
+def contar_produtos_da_categoria(category_id):
+    """Produtos da categoria, ativos e inativos (as movimentações apontam para eles)."""
+    return db.session.query(Product).filter(Product.category_id == category_id).count()
+
+
 def listar_por_nome(model, stable_id, busca=None):
     """Query base das listagens simples (categorias e fornecedores)."""
     query = db.session.query(model).filter(model.stable_id == stable_id)
@@ -107,6 +112,7 @@ __all__ = [
     "nome_em_uso",
     "codigo_em_uso",
     "validar_vinculos",
+    "contar_produtos_da_categoria",
     "listar_por_nome",
     "listar_produtos",
     "pagina",

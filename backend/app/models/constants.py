@@ -43,6 +43,7 @@ AUDIT_ACTIONS = [
     "create",
     "update",
     "deactivate",
+    "delete",
     "movement",
     "inventory",
     "incident",
