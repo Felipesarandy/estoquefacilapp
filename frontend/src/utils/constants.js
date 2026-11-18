@@ -61,3 +61,12 @@ export const EXIT_REASONS = [
 export const UNITS = ['kg', 'g', 'sc', 'l', 'ml', 'un']
 
 export const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Entre novamente.'
+
+export const UNIT_LABELS = {
+  kg: 'Quilo (kg)',
+  g: 'Grama (g)',
+  sc: 'Saco (sc)',
+  l: 'Litro (l)',
+  ml: 'Mililitro (ml)',
+  un: 'Unidade (un)',
+}

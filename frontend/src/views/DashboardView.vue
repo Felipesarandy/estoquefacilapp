@@ -32,7 +32,7 @@ const daily = useAsyncBlock(() => {
 })
 const incidents = useAsyncBlock(getIncidentsSummary)
 const movements = useAsyncBlock(() => listMovements({ per_page: LAST_MOVEMENTS }))
-// A API devolve só product_id nas movimentações; os nomes vêm da lista de insumos.
+// A API devolve só product_id nas movimentações; os nomes vêm da lista de produtos (sem filtro de situação, então inclui os inativos).
 const products = useAsyncBlock(() => listProducts({ per_page: 100 }))
 
 const blocks = [summary, alerts, daily, incidents, movements, products]
@@ -46,7 +46,7 @@ onMounted(loadAll)
 const productNames = computed(
   () => new Map((products.data.value?.items ?? []).map((p) => [p.id, p.name])),
 )
-const productName = (id) => productNames.value.get(id) ?? `Insumo #${id}`
+const productName = (id) => productNames.value.get(id) ?? `Produto #${id}`
 
 const incidentsOpen = computed(() => {
   const s = incidents.data.value?.por_status ?? {}
@@ -63,7 +63,7 @@ const chartDays = computed(() => daily.data.value?.dias ?? [])
 const hasChartData = computed(() => chartDays.value.some((d) => Number(d.entradas) || Number(d.saidas)))
 
 const attentionColumns = [
-  { key: 'name', label: 'Insumo' },
+  { key: 'name', label: 'Produto' },
   { key: 'nivel', label: 'Nível' },
   { key: 'current_stock', label: 'Estoque atual' },
   { key: 'min_stock', label: 'Mínimo' },

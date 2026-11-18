@@ -34,7 +34,7 @@ const modalOpen = ref(false)
 const confirmOpen = ref(false)
 
 const columns = [
-  { key: 'name', label: 'Insumo' },
+  { key: 'name', label: 'Produto' },
   { key: 'stock', label: 'Saldo' },
   { key: 'nivel', label: 'Nível' },
   { key: 'created_at', label: 'Criado em' },
@@ -122,16 +122,16 @@ const tones = ['slate', 'emerald', 'amber', 'orange', 'red', 'sky', 'indigo']
       <ConfirmDialog
         v-model="confirmOpen"
         danger
-        title="Desativar insumo?"
+        title="Desativar produto?"
         message="Essa ação pode ser desfeita reativando o cadastro."
         confirm-label="Desativar"
-        @confirm="confirmOpen = false; toast.success('Insumo desativado')"
+        @confirm="confirmOpen = false; toast.success('Produto desativado')"
       />
     </section>
 
     <section>
       <h2 class="mb-3 text-lg font-semibold text-slate-800">Tabela e paginação</h2>
-      <BaseTable caption="Insumos de exemplo" :columns="columns" :rows="rows">
+      <BaseTable caption="Produtos de exemplo" :columns="columns" :rows="rows">
         <template #cell-nivel="{ row }"><StockLevelBadge :level="row.nivel" /></template>
         <template #cell-created_at="{ value }">{{ formatDateTime(value) }}</template>
       </BaseTable>
