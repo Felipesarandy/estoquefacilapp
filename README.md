@@ -12,7 +12,7 @@ Controle de estoque dos insumos de um haras que usa o alimentador automático **
 | Pasta | O que é | Documentação |
 |---|---|---|
 | `backend/` | API REST em Flask + SQLAlchemy + JWT (SQLite em desenvolvimento) | [backend/README.md](backend/README.md) e [backend/docs/](backend/docs/) |
-| `front-end/` | Interface em Vue 3 (em desenvolvimento), consome a API em `http://localhost:5000/api` | — |
+| `frontend/` | Interface em Vue 3 (em desenvolvimento), consome a API em `http://localhost:5000/api` | — |
 
 O que mudou e os avisos para o grupo ficam em [changes.txt](changes.txt).
 

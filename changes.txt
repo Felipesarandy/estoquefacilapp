@@ -32,7 +32,7 @@ Atualizado em 17/11/2026
 
 9. Arquivos do backend agora usam fim de linha LF (antes CRLF).
 
-10. Front-end fica na pasta front-end/ (Vue 3). Ainda nao iniciado.
+10. Front-end fica na pasta frontend/ (Vue 3 + Vite + Tailwind). Em desenvolvimento.
 
 11. Nunca versionar: .env, *.db, .venv/. Use backend/.env.example como base.
 
