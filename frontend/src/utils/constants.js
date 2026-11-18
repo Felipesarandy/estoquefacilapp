@@ -87,3 +87,84 @@ export const INCIDENT_TRANSITIONS = {
   ],
   fechado: [],
 }
+
+// Trilha de auditoria: rótulos das entidades e ações (valores reais da API).
+export const AUDIT_ENTITIES = {
+  user: 'Usuário',
+  category: 'Categoria',
+  supplier: 'Fornecedor',
+  product: 'Produto',
+  movement: 'Movimentação',
+  inventory_count: 'Inventário',
+  incident: 'Incidente',
+}
+
+export const AUDIT_ACTIONS = {
+  login: { label: 'Login', tone: 'amber' },
+  login_failed: { label: 'Falha de login', tone: 'red' },
+  create: { label: 'Criação', tone: 'emerald' },
+  update: { label: 'Alteração', tone: 'slate' },
+  deactivate: { label: 'Desativação', tone: 'orange' },
+  delete: { label: 'Exclusão', tone: 'rose' },
+  movement: { label: 'Movimentação', tone: 'sky' },
+  inventory: { label: 'Inventário', tone: 'indigo' },
+  incident: { label: 'Incidente', tone: 'amber' },
+}
+
+// Rotas (por nome) onde cada entidade pode ser consultada.
+export const AUDIT_ENTITY_ROUTES = {
+  user: 'usuarios',
+  category: 'categorias',
+  supplier: 'fornecedores',
+  product: 'produtos',
+  movement: 'movimentacoes',
+  inventory_count: 'inventario',
+  incident: 'incidentes',
+}
+
+// Rótulos de campos dos snapshots (o que não estiver aqui aparece com o nome técnico).
+export const AUDIT_FIELDS = {
+  name: 'Nome',
+  email: 'E-mail',
+  phone: 'Telefone',
+  role: 'Perfil',
+  active: 'Ativo',
+  code: 'Código',
+  unit: 'Unidade',
+  category_id: 'Categoria (id)',
+  supplier_id: 'Fornecedor (id)',
+  product_id: 'Produto (id)',
+  user_id: 'Usuário (id)',
+  stable_id: 'Haras (id)',
+  cost_price: 'Preço de custo',
+  min_stock: 'Colchão mínimo',
+  max_stock: 'Estoque máximo',
+  current_stock: 'Estoque atual',
+  daily_consumption: 'Consumo diário',
+  type: 'Tipo',
+  reason: 'Motivo',
+  quantity: 'Quantidade',
+  unit_cost: 'Custo unitário',
+  total_cost: 'Custo total',
+  batch: 'Lote',
+  expiration_date: 'Validade',
+  note: 'Observação',
+  status: 'Status',
+  severity: 'Gravidade',
+  description: 'Descrição',
+  resolution: 'Resolução',
+  assigned_to_id: 'Responsável (id)',
+  opened_by_id: 'Aberto por (id)',
+  opened_at: 'Aberto em',
+  closed_at: 'Encerrado em',
+  created_at: 'Criado em',
+  system_quantity: 'Quantidade no sistema',
+  counted_quantity: 'Quantidade contada',
+  difference: 'Diferença',
+  password_changed: 'Senha alterada',
+}
+
+export const INVENTORY_RESULTS = {
+  divergencia: 'Só divergências',
+  ok: 'Sem divergência',
+}
