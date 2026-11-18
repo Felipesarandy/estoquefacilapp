@@ -11,7 +11,10 @@ dependencies = [
     "Flask>=3.0",
     "Flask-SQLAlchemy>=3.1",
     "Flask-Migrate>=4.0",
+    "Flask-JWT-Extended>=4.6",
+    "Flask-Cors>=4.0",
     "python-dotenv",
+    "tzdata",  # banco de fusos (o Windows nao tras um)
 ]
 
 [project.optional-dependencies]
@@ -20,8 +23,16 @@ test = ["pytest>=8.3", "pytest-flask"]
 postgres = ["psycopg2-binary"]
 
 [tool.setuptools]
-packages = ["app"]
+packages = [
+    "app",
+    "app.models",
+    "app.api",
+    "app.schemas",
+    "app.services",
+]
 py-modules = ["config"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# importlib: permite test_alerts.py em tests/api/ e em tests/services/
+addopts = "--import-mode=importlib"

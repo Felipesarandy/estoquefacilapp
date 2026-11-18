@@ -1,36 +1,37 @@
 """Dados iniciais para desenvolvimento e testes.
 
 Uso:  flask seed
+
+Monta um haras de demonstração com insumos nos quatro níveis de estoque
+(ruptura, critico, atencao e ok) e movimentações espalhadas pelos
+últimos sete dias. Quem mexe no saldo é sempre
+`app.services.stock.registrar_movimentacao`.
 """
-from datetime import date
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 import click
 
 from app.extensions import db
 from app.models import (
-    Category, InventoryCount, Product, Stable, StockMovement, Supplier, User,
+    Category, InventoryCount, Product, Stable, Supplier, User,
 )
+from app.services.alerts import fuso, hoje, nivel
+from app.services.stock import registrar_movimentacao
+
+DIAS_DE_HISTORICO = 7
 
 
-def registrar_movimentacao(produto, usuario, tipo, motivo, quantidade, obs=None,
-                           lote=None, validade=None):
-    """Cria a movimentação e atualiza o saldo na mesma operação."""
-    quantidade = Decimal(str(quantidade))
-    if tipo == "saida" and quantidade > produto.current_stock:
-        raise ValueError(f"Saldo insuficiente de {produto.name}")
+def _quando(dias_atras, hora=8):
+    """Instante de um dia atrás, no fuso do haras, convertido para UTC.
 
-    mov = StockMovement(
-        product=produto, user=usuario, type=tipo, reason=motivo,
-        quantity=quantidade, unit_cost=produto.cost_price, note=obs,
-        batch=lote, expiration_date=validade,
-    )
-    if tipo == "entrada":
-        produto.current_stock += quantidade
-    else:
-        produto.current_stock -= quantidade
-    db.session.add(mov)
-    return mov
+    O banco grava `created_at` em UTC (CURRENT_TIMESTAMP), então o seed
+    guarda UTC para o registro diário cair no dia local certo.
+    """
+    dia = hoje() - timedelta(days=dias_atras)
+    local = datetime.combine(dia, time(hour=hora), tzinfo=fuso())
+
+    return local.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 @click.command("seed")
@@ -63,6 +64,9 @@ def seed_command():
         Product(stable=haras, category=racao, supplier=nutriequi, name="Ração extrusada performance",
                 code="EQ002", unit="kg", cost_price=Decimal("5.80"),
                 min_stock=Decimal("50"), daily_consumption=Decimal("8")),
+        Product(stable=haras, category=racao, supplier=nutriequi, name="Ração de potros (crescimento)",
+                code="EQ003", unit="kg", cost_price=Decimal("4.50"),
+                min_stock=Decimal("20"), max_stock=Decimal("400"), daily_consumption=Decimal("30")),
         Product(stable=haras, category=volumoso, supplier=agro, name="Feno de tifton (fardo)",
                 code="EQ100", unit="un", cost_price=Decimal("35.00"),
                 min_stock=Decimal("10"), daily_consumption=Decimal("2")),
@@ -80,37 +84,64 @@ def seed_command():
                         nutriequi, agro, *produtos])
     db.session.flush()
 
-    peletizada, extrusada, feno, sal, oleo, vitamina = produtos
+    peletizada, extrusada, potros, feno, sal, oleo, vitamina = produtos
 
-    # Entradas (compras), com lote e validade
-    registrar_movimentacao(peletizada, admin, "entrada", "compra", 500, "20 sacos de 25 kg",
-                           lote="L2611A", validade=date(2027, 3, 1))
-    registrar_movimentacao(extrusada, admin, "entrada", "compra", 120,
-                           lote="L2611B", validade=date(2027, 2, 15))
-    registrar_movimentacao(feno, admin, "entrada", "compra", 40)
-    registrar_movimentacao(sal, admin, "entrada", "compra", 25, lote="S1029", validade=date(2027, 10, 1))
-    registrar_movimentacao(oleo, admin, "entrada", "compra", 20)
-    registrar_movimentacao(vitamina, admin, "entrada", "compra", 5, lote="V0915", validade=date(2027, 1, 30))
+    def entrada(produto, quantidade, dias_atras, lote=None, validade=None, obs=None, hora=8):
+        registrar_movimentacao(admin, produto, "entrada", quantidade, "compra",
+                               batch=lote, expiration_date=validade, note=obs,
+                               created_at=_quando(dias_atras, hora))
 
-    # Saídas (alimentador, trato manual e quebra)
-    registrar_movimentacao(peletizada, tratador, "saida", "abastecimento_alimentador", 420)  # abaixo do mínimo
-    registrar_movimentacao(extrusada, tratador, "saida", "trato_manual", 40)
-    registrar_movimentacao(feno, tratador, "saida", "trato_manual", 32)          # abaixo do mínimo
-    registrar_movimentacao(sal, tratador, "saida", "trato_manual", 12)
-    registrar_movimentacao(oleo, tratador, "saida", "trato_manual", 10)
-    registrar_movimentacao(oleo, tratador, "saida", "avaria", 2, "Galão furado")
-    registrar_movimentacao(vitamina, tratador, "saida", "trato_manual", 3)       # fica no mínimo
+    def saida(produto, quantidade, motivo, dias_atras, obs=None, hora=17, usuario=None):
+        registrar_movimentacao(usuario or tratador, produto, "saida", quantidade, motivo,
+                               note=obs, created_at=_quando(dias_atras, hora))
 
-    # Auditoria: contagem física encontrou 1 kg de sal mineral a menos
+    # ---------------------------------------------------------------- compras
+    entrada(peletizada, 500, 7, lote="L2611A", validade=date(2027, 3, 1),
+            obs="20 sacos de 25 kg")
+    entrada(extrusada, 120, 7, lote="L2611B", validade=date(2027, 2, 15))
+    entrada(feno, 40, 6)
+    entrada(sal, 25, 6, lote="S1029", validade=date(2027, 10, 1))
+    entrada(oleo, 20, 5)
+    entrada(vitamina, 5, 5, lote="V0915", validade=date(2027, 1, 30))
+    entrada(potros, 300, 4, lote="L2612C", validade=date(2027, 4, 20),
+            obs="12 sacos de 25 kg")
+    entrada(peletizada, 100, 2, lote="L2612A", validade=date(2027, 5, 10))
+
+    # ------------------------------------------------- trato dos últimos dias
+    for dias_atras in range(DIAS_DE_HISTORICO - 1, -1, -1):
+        saida(peletizada, 70, "abastecimento_alimentador", dias_atras, hora=6)
+        saida(extrusada, 5, "trato_manual", dias_atras, hora=7)
+        saida(feno, 4, "trato_manual", dias_atras, hora=16)
+
+    # Saídas pontuais que deixam cada insumo em um nível diferente:
+    # vitamínico zera (ruptura), peletizada e feno ficam sob o mínimo (critico),
+    # potros fica com ~1,3 dia de cobertura (atencao) e o resto segue em ok.
+    saida(peletizada, 30, "trato_manual", 1, "Baias de recuperação")
+    saida(potros, 200, "abastecimento_alimentador", 3)
+    saida(potros, 60, "trato_manual", 1)
+    saida(oleo, 10, "trato_manual", 4)
+    saida(oleo, 2, "avaria", 3, "Galão furado")
+    saida(sal, 12, "trato_manual", 2)
+    saida(vitamina, 5, "trato_manual", 2, "Fim do lote V0915")   # zera: ruptura
+    saida(feno, 4, "trato_manual", 0, hora=18)                   # abaixo do mínimo: critico
+
+    # ------------------------------------------- auditoria (contagem física)
     contagem = InventoryCount(product=sal, user=admin,
-                              system_quantity=sal.current_stock, counted_quantity=Decimal("12"))
+                              system_quantity=sal.current_stock,
+                              counted_quantity=sal.current_stock - Decimal("1"))
     db.session.add(contagem)
-    registrar_movimentacao(sal, admin, "saida", "ajuste", 1, "Ajuste após inventário")
+    saida(sal, 1, "ajuste", 0, "Ajuste após inventário", usuario=admin)
 
     db.session.commit()
 
-    em_alerta = [p.name for p in produtos if p.is_low_stock]
+    por_nivel = {}
+    for produto in produtos:
+        por_nivel.setdefault(nivel(produto), []).append(produto.name)
+
     click.echo("Banco populado!")
     click.echo("  admin@haras.com    / admin123  (admin)")
     click.echo("  tratador@haras.com / trat123   (tratador)")
-    click.echo(f"  Insumos em alerta: {', '.join(em_alerta)}")
+
+    for situacao in ("ruptura", "critico", "atencao", "ok"):
+        nomes = por_nivel.get(situacao, [])
+        click.echo(f"  {situacao:<9} ({len(nomes)}): {', '.join(nomes) or '-'}")

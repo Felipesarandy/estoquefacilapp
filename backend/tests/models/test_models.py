@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.models import Category, InventoryCount, Product, StockMovement, User
-from app.seed import registrar_movimentacao
+from app.services.stock import ConflitoDeEstoque, registrar_movimentacao
 
 
 def test_senha_com_hash(haras):
@@ -17,15 +17,15 @@ def test_senha_com_hash(haras):
 
 def test_entrada_aumenta_saldo(db, haras):
     p = haras["product"]
-    registrar_movimentacao(p, haras["user"], "entrada", "compra", 10)
+    registrar_movimentacao(haras["user"], p, "entrada", 10, "compra")
     db.session.commit()
     assert p.current_stock == 10
     assert len(p.movements) == 1
 
 
 def test_entrada_guarda_lote_e_validade(db, haras):
-    mov = registrar_movimentacao(haras["product"], haras["user"], "entrada", "compra", 25,
-                                 lote="L01", validade=date(2027, 1, 1))
+    mov = registrar_movimentacao(haras["user"], haras["product"], "entrada", 25, "compra",
+                                 batch="L01", expiration_date=date(2027, 1, 1))
     db.session.commit()
     assert mov.batch == "L01"
     assert mov.expiration_date == date(2027, 1, 1)
@@ -33,28 +33,28 @@ def test_entrada_guarda_lote_e_validade(db, haras):
 
 def test_abastecimento_do_alimentador_diminui_saldo(db, haras):
     p = haras["product"]
-    registrar_movimentacao(p, haras["user"], "entrada", "compra", 50)
-    registrar_movimentacao(p, haras["user"], "saida", "abastecimento_alimentador", 20)
+    registrar_movimentacao(haras["user"], p, "entrada", 50, "compra")
+    registrar_movimentacao(haras["user"], p, "saida", 20, "abastecimento_alimentador")
     db.session.commit()
     assert p.current_stock == 30
 
 
 def test_saida_maior_que_saldo_e_bloqueada(haras):
-    with pytest.raises(ValueError):
-        registrar_movimentacao(haras["product"], haras["user"], "saida", "trato_manual", 1)
+    with pytest.raises(ConflitoDeEstoque):
+        registrar_movimentacao(haras["user"], haras["product"], "saida", 1, "trato_manual")
 
 
 def test_alerta_estoque_minimo(db, haras):
     p = haras["product"]
-    registrar_movimentacao(p, haras["user"], "entrada", "compra", 5)
+    registrar_movimentacao(haras["user"], p, "entrada", 5, "compra")
     assert p.is_low_stock          # 5 <= 5
-    registrar_movimentacao(p, haras["user"], "entrada", "compra", 1)
+    registrar_movimentacao(haras["user"], p, "entrada", 1, "compra")
     assert not p.is_low_stock      # 6 > 5
 
 
 def test_capital_imobilizado(db, haras):
     p = haras["product"]
-    registrar_movimentacao(p, haras["user"], "entrada", "compra", 3)
+    registrar_movimentacao(haras["user"], p, "entrada", 3, "compra")
     assert p.stock_value == Decimal("30")   # 3 kg x R$ 10
 
 
@@ -62,7 +62,7 @@ def test_dias_de_cobertura(db, haras):
     p = haras["product"]
     assert p.days_left is None              # consumo diário não informado
     p.daily_consumption = Decimal("4")
-    registrar_movimentacao(p, haras["user"], "entrada", "compra", 20)
+    registrar_movimentacao(haras["user"], p, "entrada", 20, "compra")
     assert p.days_left == 5                 # 20 kg / 4 kg por dia
 
 

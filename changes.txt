@@ -1,0 +1,54 @@
+EstoqueFacil - o que mudou (avisos para o grupo)
+Atualizado em 17/11/2026
+
+1. Backend unificado em backend/. A API da pasta estoquefacil-feature-backend
+   esta sendo portada para la, adaptada ao haras. A pasta do feature serve so
+   de referencia e sai do projeto no final.
+
+2. Dominio: HARAS (Stable, papeis admin e tratador). O modelo de "loja"
+   (Store, funcionario) NAO sera usado.
+
+3. models.py virou um pacote: backend/app/models/ (um arquivo por tabela).
+   O esquema e a migration nao mudaram. Os imports continuam iguais:
+   from app.models import Product
+
+4. API REST em /api (ex.: /api/products). Erros sempre em JSON:
+   {"error": {"status": 404, "message": "..."}}
+
+5. Nao existe cadastro publico (/register). O primeiro admin vem do seed
+   (flask seed) e os demais usuarios sao criados por um admin.
+
+6. "Quebra de estoque" = colchao minimo (min_stock): o estoque de seguranca
+   para o produto nao acabar. O sistema alerta ate 5 dias antes da quebra
+   (cobertura <= 5 dias). A constante MOTIVOS_QUEBRA foi renomeada para
+   MOTIVOS_PERDA (avaria, vencimento, furto continuam como motivos de saida).
+
+7. Migrations: existe so a d2b9e292d1e5. Mudancas no banco entram em novas
+   migrations por cima, e so UMA pessoa gera migrations. Avisem antes de
+   mexer nos models.
+
+8. Banco local pode ser recriado a qualquer hora (dados sao ficticios):
+   apagar backend/instance/dev.db, flask db upgrade, flask seed.
+
+9. Arquivos do backend agora usam fim de linha LF (antes CRLF).
+
+10. Front-end fica na pasta front-end/ (Vue 3). Ainda nao iniciado.
+
+11. Nunca versionar: .env, *.db, .venv/. Use backend/.env.example como base.
+
+12. Movimentacoes de estoque (POST/GET /api/movements): sao IMUTAVEIS (sem
+    editar nem apagar). Correcao = nova movimentacao com motivo "ajuste" e
+    observacao. Saida acima do saldo retorna 409. Registro diario em
+    GET /api/movements/daily (por dia, por produto e por usuario).
+
+13. Alertas de quebra de estoque: GET /api/alerts e GET /api/dashboard.
+    Niveis: ruptura, critico, atencao, ok. ALERTA_DIAS_ANTECEDENCIA=5 (.env).
+
+14. Logging configurado (LOG_LEVEL no .env, padrao INFO). `flask seed` agora
+    gera dados de demonstracao com os 4 niveis e 7 dias de historico.
+
+15. A pasta estoquefacil-feature-backend foi removida do projeto (ha backup
+    em D:\Code\backup_pre_integracao). O codigo util ja esta em backend/.
+
+16. Confirmar com o professor: so o modelo de auditoria ITIL. O formato do
+    registro diario de entradas/saidas e a regra dos 5 dias sao decisao do grupo.
