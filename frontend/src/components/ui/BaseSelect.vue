@@ -1,5 +1,5 @@
 <script setup>
-import { computed, useId } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { fieldClasses } from '../../utils/ui'
 
 defineOptions({ inheritAttrs: false })
@@ -15,6 +15,9 @@ const props = defineProps({
   id: { type: String, default: '' },
 })
 defineEmits(['update:modelValue'])
+
+const select = ref(null)
+defineExpose({ focus: () => select.value?.focus() })
 
 const autoId = useId()
 const selectId = computed(() => props.id || autoId)
@@ -32,6 +35,7 @@ const describedBy = computed(() => {
     </label>
     <select
       :id="selectId"
+      ref="select"
       v-bind="$attrs"
       :value="modelValue"
       :aria-required="required || undefined"

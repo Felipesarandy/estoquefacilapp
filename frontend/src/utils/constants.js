@@ -8,10 +8,10 @@ export const STOCK_LEVELS = {
 }
 
 export const INCIDENT_STATUS = {
-  aberto: { label: 'Aberto', classes: 'bg-red-100 text-red-800 ring-red-600/20' },
-  em_analise: { label: 'Em análise', classes: 'bg-amber-100 text-amber-800 ring-amber-600/20' },
-  resolvido: { label: 'Resolvido', classes: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20' },
-  fechado: { label: 'Fechado', classes: 'bg-slate-100 text-slate-700 ring-slate-500/20' },
+  aberto: { label: 'Aberto', tone: 'red', classes: 'bg-red-100 text-red-800 ring-red-600/20' },
+  em_analise: { label: 'Em análise', tone: 'amber', classes: 'bg-amber-100 text-amber-800 ring-amber-600/20' },
+  resolvido: { label: 'Resolvido', tone: 'emerald', classes: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20' },
+  fechado: { label: 'Fechado', tone: 'slate', classes: 'bg-slate-100 text-slate-700 ring-slate-500/20' },
 }
 
 export const INCIDENT_SEVERITY = {
@@ -69,4 +69,21 @@ export const UNIT_LABELS = {
   l: 'Litro (l)',
   ml: 'Mililitro (ml)',
   un: 'Unidade (un)',
+}
+
+// Transições de status permitidas pela API (só o admin as executa). needsText: exige resolução.
+export const INCIDENT_TRANSITIONS = {
+  aberto: [
+    { to: 'em_analise', label: 'Iniciar análise' },
+    { to: 'resolvido', label: 'Marcar como resolvido', needsText: true },
+  ],
+  em_analise: [
+    { to: 'resolvido', label: 'Marcar como resolvido', needsText: true },
+    { to: 'aberto', label: 'Voltar para aberto' },
+  ],
+  resolvido: [
+    { to: 'fechado', label: 'Fechar incidente' },
+    { to: 'em_analise', label: 'Reabrir análise' },
+  ],
+  fechado: [],
 }
