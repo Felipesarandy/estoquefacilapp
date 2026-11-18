@@ -1,0 +1,15 @@
+# Desafios técnicos e como foram resolvidos
+
+| Desafio | Solução |
+|---|---|
+| **Unificar dois backends** (`backend/` e `estoquefacil-feature-backend/`, com modelos diferentes: loja x haras) | O `backend/` virou a fonte da verdade (domínio de haras: `Stable`, tratador). Arquivos idênticos ficaram com uma cópia só; dependências, `.gitignore` e `.env.example` foram unidos; as rotas do feature foram reescritas e adaptadas (não copiadas), sem `/register` e com o formato de erro padrão. |
+| **Migrations sem reescrever o passado** | A migration inicial (`d2b9e292d1e5`) nunca foi alterada. Auditoria e incidentes entraram numa migration única por cima (`84631ed584e8`), com constraints, FKs e índices nomeados para funcionar no SQLite em batch mode. `flask db check` limpo a cada etapa e teste de upgrade do zero e de downgrade. |
+| **Fuso horário nas datas** | O banco grava `created_at` em UTC; o "dia" do registro diário é o dia local do haras (`TIMEZONE`). `intervalo_do_dia` converte o dia local em um intervalo UTC; há teste para uma movimentação às 23h30 locais (já outro dia em UTC). |
+| **Baixa atômica de estoque** (duas saídas ao mesmo tempo não podem deixar saldo negativo) | Um único `UPDATE products SET current_stock = current_stock - :q WHERE id = :id AND stable_id = :s AND current_stock >= :q`. Se nenhuma linha muda, é 409 e nada é gravado. Reforço no banco: `CHECK current_stock >= 0`. |
+| **Imutabilidade** (movimentação, contagem, auditoria) | Sem rotas de `PATCH`/`PUT`/`DELETE` (405). `AuditLog` e `InventoryCount` têm listeners `before_update`/`before_delete` que levantam erro. Correção de estoque é sempre uma nova movimentação de ajuste. |
+| **N+1 nas listagens** | Nível, cobertura e previsão de ruptura são calculados em Python sobre as colunas já carregadas. `/api/alerts` faz 1 consulta, `/api/products` 2 (contagem + página) e `/api/dashboard` 4, independentemente do número de insumos (medido contando os `SELECT` com 40 insumos). O registro diário agrega com `GROUP BY` no banco. |
+| **Compatibilidade Windows / fuso** | O Windows não traz a base de fusos do Python (`zoneinfo`): adicionamos a dependência `tzdata` e um fallback para o fuso do sistema. Arquivos convertidos de CRLF para LF. |
+| **Import circular** | Os erros de regra de negócio ficam em `app/services/exceptions.py` e o handler de erros não importa `app.api`. `stock` usa `incidents` e `audit`, mas nenhum deles importa `stock`. Verificado criando o app com `python -W error`. |
+| **Senha fora de qualquer log ou trilha** | `snapshot` descarta `password`/`password_hash`; a troca de senha aparece só como `"password_changed": true`. Teste confirma que nem o hash nem a senha aparecem no `AuditLog`. |
+| **Dois `test_alerts.py`** (em `tests/api/` e `tests/services/`) colidindo no pytest | `--import-mode=importlib` no `pyproject.toml`. |
+| **Avisos de chave JWT curta nos testes** | `TestingConfig` usa uma `JWT_SECRET_KEY` de teste com mais de 32 bytes; a suíte roda sem warnings. Em produção a aplicação não sobe com chave padrão. |

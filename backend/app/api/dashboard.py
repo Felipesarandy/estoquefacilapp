@@ -5,13 +5,14 @@ from app.api.security import login_required
 from app.schemas.alerts import serialize_alert
 from app.schemas.movements import serialize_daily, serialize_movement
 from app.services.alerts import (
+    OK,
     contagem_por_nivel,
     dias_antecedencia,
+    nivel as nivel_do,
     ordenar_por_gravidade,
     produtos_ativos,
-    nivel as nivel_do,
-    OK,
 )
+from app.services.incidents import contar_ativos
 from app.services.stock import movimentacoes_do_dia, ultimas_movimentacoes
 
 bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
@@ -38,4 +39,6 @@ def get_dashboard(user):
         "ultimas_movimentacoes": [
             serialize_movement(m) for m in ultimas_movimentacoes(user.stable_id, ULTIMAS)
         ],
+        # aditivo: incidentes que ainda pedem ação (aberto ou em análise)
+        "incidentes_abertos": contar_ativos(user.stable_id),
     }), 200

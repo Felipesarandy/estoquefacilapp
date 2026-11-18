@@ -1,5 +1,5 @@
 """Schemas de movimentação: tipo, motivo, quantidade, lote e validade."""
-from app.models import MOTIVOS_ENTRADA, MOTIVOS_SAIDA
+from app.models import MOTIVOS_POR_TIPO, TIPOS_MOVIMENTACAO
 from app.schemas.common import (
     ValidationError,
     choice_field,
@@ -8,19 +8,12 @@ from app.schemas.common import (
     decimal_field,
     integer_field,
     optional_string,
+    texto,
 )
 
-TIPOS = ["entrada", "saida"]
-MOTIVOS_POR_TIPO = {"entrada": MOTIVOS_ENTRADA, "saida": MOTIVOS_SAIDA}
+TIPOS = TIPOS_MOVIMENTACAO
 MAX_DIAS_PERIODO = 31
 
-
-def _texto(valor):
-    """Decimal/Date/DateTime como texto no JSON."""
-    if valor is None:
-        return None
-
-    return valor.isoformat() if hasattr(valor, "isoformat") else str(valor)
 
 
 def serialize_movement(item):
@@ -31,21 +24,21 @@ def serialize_movement(item):
         "user_id": item.user_id,
         "type": item.type,
         "reason": item.reason,
-        "quantity": _texto(item.quantity),
-        "unit_cost": _texto(item.unit_cost),
-        "total_cost": _texto(item.total_cost),
+        "quantity": texto(item.quantity),
+        "unit_cost": texto(item.unit_cost),
+        "total_cost": texto(item.total_cost),
         "batch": item.batch,
-        "expiration_date": _texto(item.expiration_date),
+        "expiration_date": texto(item.expiration_date),
         "note": item.note,
-        "created_at": _texto(item.created_at),
+        "created_at": texto(item.created_at),
     }
 
 
 def _totais(item):
     return {
-        "entradas": _texto(item["entradas"]),
-        "saidas": _texto(item["saidas"]),
-        "saldo": _texto(item["saldo"]),
+        "entradas": texto(item["entradas"]),
+        "saidas": texto(item["saidas"]),
+        "saldo": texto(item["saldo"]),
         "total_movimentacoes": item["total_movimentacoes"],
     }
 
@@ -57,7 +50,7 @@ def serialize_daily(registro):
     total_movimentacoes) são as que o dashboard consome. As listas
     `produtos` e `usuarios` só aparecem quando o registro as traz.
     """
-    corpo = {"data": _texto(registro["data"]), **_totais(registro)}
+    corpo = {"data": texto(registro["data"]), **_totais(registro)}
 
     for lista in ("produtos", "usuarios"):
         if lista in registro:

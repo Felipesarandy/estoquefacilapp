@@ -15,6 +15,7 @@ from app.schemas.suppliers import (
     serialize_supplier,
     supplier_update_payload,
 )
+from app.services import audit
 from app.services.catalog import do_haras, listar_por_nome, nome_em_uso, pagina
 
 bp = Blueprint("suppliers", __name__, url_prefix="/suppliers")
@@ -55,6 +56,7 @@ def create_supplier(user):
 
     item = Supplier(stable_id=user.stable_id, **dados)
     db.session.add(item)
+    audit.registrar_criacao(user, "supplier", item)
     db.session.commit()
 
     return jsonify(serialize_supplier(item)), 201
@@ -76,9 +78,12 @@ def update_supplier(user, supplier_id):
     ):
         return api_error(409, "Fornecedor já cadastrado")
 
+    antes = audit.snapshot(item)
+
     for campo, valor in changes.items():
         setattr(item, campo, valor)
 
+    audit.registrar_alteracao(user, "supplier", item, antes)
     db.session.commit()
 
     return jsonify(serialize_supplier(item)), 200

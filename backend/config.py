@@ -1,3 +1,7 @@
+"""Configuração por ambiente (development, testing, production).
+
+Os valores vêm de variáveis de ambiente (.env); ver .env.example.
+"""
 import os
 
 CHAVE_INSEGURA = "chave-padrao-insegura"
@@ -40,6 +44,7 @@ class DevelopmentConfig(DefaultConfig):
 class TestingConfig(DefaultConfig):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    JWT_SECRET_KEY = "chave-dos-testes-automatizados-com-32-bytes-ou-mais"
 
 
 class ProductionConfig(DefaultConfig):

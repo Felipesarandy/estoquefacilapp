@@ -1,6 +1,5 @@
 """Movimentações de estoque pela API (/api/movements)."""
 from datetime import timedelta
-from decimal import Decimal
 
 import pytest
 

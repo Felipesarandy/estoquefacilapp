@@ -10,7 +10,7 @@ from werkzeug.exceptions import HTTPException
 
 from app.extensions import db
 from app.schemas.common import ValidationError
-from app.services.stock import ConflitoDeEstoque
+from app.services.exceptions import Conflito
 
 # Status usados pela API (REST): 200, 201, 204, 400, 401, 403, 404, 409, 422
 MENSAGENS = {
@@ -44,8 +44,8 @@ def register_error_handlers(app):
         details = {"field": e.field} if e.field else None
         return api_error(e.status, e.message, details)
 
-    @app.errorhandler(ConflitoDeEstoque)
-    def _conflito_de_estoque(e):
+    @app.errorhandler(Conflito)
+    def _conflito(e):
         db.session.rollback()
         return api_error(409, e.message)
 
@@ -57,8 +57,8 @@ def register_error_handlers(app):
     def _erro_inesperado(e):
         if isinstance(e, ValidationError):
             return _dados_invalidos(e)
-        if isinstance(e, ConflitoDeEstoque):
-            return _conflito_de_estoque(e)
+        if isinstance(e, Conflito):
+            return _conflito(e)
         if isinstance(e, HTTPException):
             return _http_exception(e)
         app.logger.exception("Erro não tratado na API")

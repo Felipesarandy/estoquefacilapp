@@ -1,3 +1,8 @@
+"""Atalhos de desenvolvimento (invoke).
+
+Uso:  invoke --list
+      invoke install upgrade seed run
+"""
 from invoke import task
 
 
@@ -9,7 +14,7 @@ def install(c):
 
 @task
 def migrate(c, msg="atualizacao"):
-    """Gera uma nova migração a partir dos models."""
+    """Gera uma nova migração a partir dos models (só uma pessoa do grupo)."""
     c.run(f'flask db migrate -m "{msg}"', echo=True)
 
 
@@ -21,8 +26,14 @@ def upgrade(c):
 
 @task
 def seed(c):
-    """Popula o banco com dados de exemplo."""
-    c.run("flask seed", echo=True)
+    """Recria o haras de demonstração (APAGA os dados, sem perguntar)."""
+    c.run("flask seed --force", echo=True)
+
+
+@task
+def run(c, port=5000):
+    """Sobe a API em modo de desenvolvimento."""
+    c.run(f"flask run --port {port}", echo=True, pty=False)
 
 
 @task

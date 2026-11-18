@@ -1,3 +1,9 @@
+"""Application Factory do EstoqueFácil (create_app).
+
+Monta a aplicação a partir da configuração (config.py + .env), liga as
+extensões (SQLAlchemy, Migrate, JWT, CORS), o logging, os blueprints da
+API e o comando `flask seed`.
+"""
 import logging
 import os
 

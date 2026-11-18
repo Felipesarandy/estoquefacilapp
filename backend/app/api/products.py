@@ -24,6 +24,7 @@ from app.schemas.products import (
     product_update_payload,
     serialize_product,
 )
+from app.services import audit
 from app.services.catalog import (
     codigo_em_uso,
     do_haras,
@@ -83,6 +84,7 @@ def create_product(user):
     db.session.add(item)
 
     try:
+        audit.registrar_criacao(user, "product", item)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
@@ -113,10 +115,13 @@ def update_product(user, product_id):
     ):
         return api_error(409, "Código de insumo já usado neste haras")
 
+    antes = audit.snapshot(item)
+
     for campo, valor in changes.items():
         setattr(item, campo, valor)
 
     try:
+        audit.registrar_alteracao(user, "product", item, antes)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()

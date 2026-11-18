@@ -17,6 +17,7 @@ from app.schemas.categories import (
     serialize_category,
 )
 from app.schemas.common import body, pagination_args, paginated, search_arg
+from app.services import audit
 from app.services.catalog import do_haras, listar_por_nome, nome_em_uso, pagina
 
 bp = Blueprint("categories", __name__, url_prefix="/categories")
@@ -59,6 +60,7 @@ def create_category(user):
     db.session.add(item)
 
     try:
+        audit.registrar_criacao(user, "category", item)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
@@ -81,9 +83,11 @@ def update_category(user, category_id):
     if nome_em_uso(Category, user.stable_id, changes["name"], ignorar_id=item.id):
         return api_error(409, "Categoria já cadastrada")
 
+    antes = audit.snapshot(item)
     item.name = changes["name"]
 
     try:
+        audit.registrar_alteracao(user, "category", item, antes)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()

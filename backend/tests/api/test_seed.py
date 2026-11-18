@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from app.models import Product, StockMovement
+from app.models import AuditLog, Incident, InventoryCount, Product, StockMovement
 from app.seed import DIAS_DE_HISTORICO, seed_command
 from app.services.alerts import hoje
 
@@ -11,7 +11,7 @@ from app.services.alerts import hoje
 @pytest.fixture
 def banco_populado(app, db):
     """Roda o comando `flask seed` no banco de teste."""
-    resultado = app.test_cli_runner().invoke(seed_command)
+    resultado = app.test_cli_runner().invoke(seed_command, ["--force"])
 
     assert resultado.exit_code == 0, resultado.output
     return resultado.output
@@ -90,3 +90,36 @@ def test_saldos_nunca_ficam_negativos(client, db, headers):
 
     assert saldos
     assert all(saldo >= 0 for saldo in saldos)
+
+
+def test_seed_sem_force_pede_confirmacao_e_aborta(app, db):
+    resultado = app.test_cli_runner().invoke(seed_command, input="n\n")
+
+    assert resultado.exit_code == 1
+    assert "APAGA" in resultado.output
+    assert db.session.query(Product).count() == 0
+
+
+def test_seed_sem_force_confirmado_popula(app, db):
+    resultado = app.test_cli_runner().invoke(seed_command, input="y\n")
+
+    assert resultado.exit_code == 0
+    assert "Banco populado!" in resultado.output
+
+
+def test_seed_cria_incidentes_e_inventario(client, db, headers):
+    incidentes = {(i.type, i.status) for i in db.session.query(Incident).all()}
+
+    assert ("ruptura", "aberto") in incidentes            # vitamínico zerou
+    assert ("divergencia_inventario", "aberto") in incidentes
+    assert ("avaria", "em_analise") in incidentes        # manual, atribuído
+    assert db.session.query(InventoryCount).count() == 1
+
+    em_analise = db.session.query(Incident).filter_by(status="em_analise").one()
+    assert em_analise.assigned_to.email == "admin@haras.com"
+
+
+def test_seed_tem_trilha_de_auditoria(client, db, headers):
+    acoes = {log.action for log in db.session.query(AuditLog).all()}
+
+    assert {"create", "movement", "inventory", "incident", "login"} <= acoes

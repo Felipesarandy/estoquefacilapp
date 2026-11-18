@@ -1,3 +1,4 @@
+"""Extensões do Flask, criadas sem app e ligadas em create_app()."""
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager

@@ -16,30 +16,21 @@ from sqlalchemy import update
 
 from app.extensions import db
 from app.models import (
-    MOTIVOS_ENTRADA,
-    MOTIVOS_SAIDA,
+    MOTIVOS_POR_TIPO,
+    TIPOS_MOVIMENTACAO,
     Product,
     StockMovement,
     User,
 )
 from app.schemas.common import choice_field, decimal_field
+from app.services import audit, incidents
 from app.services.alerts import fuso, hoje
+from app.services.exceptions import ConflitoDeEstoque
 
 logger = logging.getLogger(__name__)
 
-ENTRADA = "entrada"
-SAIDA = "saida"
-TIPOS = [ENTRADA, SAIDA]
-
-MOTIVOS_POR_TIPO = {ENTRADA: MOTIVOS_ENTRADA, SAIDA: MOTIVOS_SAIDA}
-
-
-class ConflitoDeEstoque(Exception):
-    """Operação válida, mas impossível no estado atual (vira 409 na API)."""
-
-    def __init__(self, message):
-        super().__init__(message)
-        self.message = message
+ENTRADA, SAIDA = TIPOS_MOVIMENTACAO
+TIPOS = TIPOS_MOVIMENTACAO
 
 
 # --------------------------------------------------------------------------
@@ -54,8 +45,9 @@ def registrar_movimentacao(user, product, type, quantity, reason, batch=None,
     no uso normal o banco carimba a hora.
 
     Levanta ValidationError (422) para dados inválidos e ConflitoDeEstoque
-    (409) para saldo insuficiente ou insumo inativo. Não dá commit: quem
-    chama decide a hora de fechar a transação.
+    (409) para saldo insuficiente ou insumo inativo. Também grava a
+    auditoria ("movement") e sincroniza o incidente de ruptura. Não dá
+    commit: quem chama decide a hora de fechar a transação.
     """
     tipo = choice_field(type, TIPOS, "type")
     motivo = choice_field(reason, MOTIVOS_POR_TIPO[tipo], "reason")
@@ -111,6 +103,12 @@ def registrar_movimentacao(user, product, type, quantity, reason, batch=None,
 
     db.session.add(movimentacao)
     db.session.flush()
+
+    # Mesma transação: trilha de auditoria e incidente de ruptura (abre ao
+    # zerar o saldo, resolve sozinho na reposição)
+    audit.record(user, "movement", "movement", movimentacao.id,
+                 after=audit.snapshot(movimentacao))
+    incidents.sincronizar_ruptura(product, user)
 
     logger.info(
         "movimentacao registrada | usuario=%s insumo=%s tipo=%s motivo=%s "

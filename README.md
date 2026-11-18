@@ -106,3 +106,20 @@ estoquefacilapp/
 ## Front-end
 
 Ainda não iniciado.
+
+## Estrutura do repositório e como rodar
+
+| Pasta | O que é | Como rodar |
+|---|---|---|
+| `backend/` | API REST (Flask, SQLAlchemy, JWT): catálogo, movimentações, registro diário, alertas de quebra de estoque, inventário, incidentes e auditoria ITIL | instruções completas em [backend/README.md](backend/README.md); documentação em [backend/docs/](backend/docs/) |
+| `front-end/` | Interface em Vue 3 (em desenvolvimento) | consome a API em `http://localhost:5000/api` |
+
+Resumo do backend (dentro de `backend/`, com o ambiente virtual ativo):
+
+```bash
+pip install -e ".[dev,test]"
+flask db upgrade
+flask seed --force
+flask run
+pytest
+```

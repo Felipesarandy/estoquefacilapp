@@ -18,6 +18,7 @@ from app.schemas.common import (
     paginated,
 )
 from app.schemas.users import new_user_payload, serialize_user, user_update_payload
+from app.services import audit
 
 bp = Blueprint("users", __name__, url_prefix="/users")
 
@@ -83,6 +84,7 @@ def create_user(admin):
     db.session.add(novo)
 
     try:
+        audit.registrar_criacao(admin, "user", novo)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
@@ -122,6 +124,8 @@ def update_user(admin, user_id):
         if "role" in changes and changes["role"] != admin.role:
             return api_error(409, "Você não pode alterar seu próprio papel")
 
+    antes = audit.snapshot(target)
+
     if "name" in changes:
         target.name = changes["name"]
 
@@ -134,6 +138,9 @@ def update_user(admin, user_id):
     if "password" in changes:
         target.set_password(changes["password"])
 
+    # a senha nunca vai para a trilha: só o fato de ter sido trocada
+    audit.registrar_alteracao(admin, "user", target, antes,
+                              extra={"password_changed": True} if "password" in changes else None)
     db.session.commit()
 
     return jsonify(serialize_user(target)), 200

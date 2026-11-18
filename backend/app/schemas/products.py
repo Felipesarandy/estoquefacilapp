@@ -8,6 +8,7 @@ from app.schemas.common import (
     integer_field,
     optional_string,
     required_string,
+    texto,
     texto_dias,
 )
 from app.services.alerts import resumo
@@ -22,13 +23,6 @@ CAMPOS_DECIMAIS = (
     ("daily_consumption", 3),
 )
 
-
-def _texto(valor):
-    """Decimal/Date como texto, para não perder casas no JSON."""
-    if valor is None:
-        return None
-
-    return valor.isoformat() if hasattr(valor, "isoformat") else str(valor)
 
 
 def serialize_product(item):
@@ -49,16 +43,16 @@ def serialize_product(item):
         "name": item.name,
         "code": item.code,
         "unit": item.unit,
-        "cost_price": _texto(item.cost_price),
-        "min_stock": _texto(item.min_stock),
-        "max_stock": _texto(item.max_stock),
-        "current_stock": _texto(item.current_stock),
-        "daily_consumption": _texto(item.daily_consumption),
-        "stock_value": _texto(item.stock_value),
+        "cost_price": texto(item.cost_price),
+        "min_stock": texto(item.min_stock),
+        "max_stock": texto(item.max_stock),
+        "current_stock": texto(item.current_stock),
+        "daily_consumption": texto(item.daily_consumption),
+        "stock_value": texto(item.stock_value),
         "nivel": situacao["nivel"],
         "cobertura_dias": texto_dias(situacao["cobertura_dias"]),
-        "data_prevista_ruptura": _texto(situacao["data_prevista_ruptura"]),
-        "min_stock_sugerido": _texto(situacao["min_stock_sugerido"]),
+        "data_prevista_ruptura": texto(situacao["data_prevista_ruptura"]),
+        "min_stock_sugerido": texto(situacao["min_stock_sugerido"]),
         "days_left": texto_dias(situacao["days_left"]),
         "is_low_stock": situacao["is_low_stock"],
         "active": item.active,

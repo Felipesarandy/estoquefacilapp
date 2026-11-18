@@ -1,5 +1,9 @@
-"""Schemas dos metadados de domínio (unidades, motivos, papéis e níveis)."""
+"""Schemas dos metadados de domínio (unidades, motivos, papéis, níveis e ITIL)."""
 from app.models import (
+    AUDIT_ACTIONS,
+    INCIDENT_SEVERITY,
+    INCIDENT_STATUS,
+    INCIDENT_TYPES,
     MOTIVOS_ENTRADA,
     MOTIVOS_PERDA,
     MOTIVOS_SAIDA,
@@ -18,6 +22,10 @@ def serialize_meta():
         "unidades": list(UNIDADES),
         "roles": list(ROLES),
         "niveis_estoque": list(NIVEIS_ESTOQUE),
+        "incident_types": list(INCIDENT_TYPES),
+        "incident_status": list(INCIDENT_STATUS),
+        "incident_severity": list(INCIDENT_SEVERITY),
+        "audit_actions": list(AUDIT_ACTIONS),
     }
 
 

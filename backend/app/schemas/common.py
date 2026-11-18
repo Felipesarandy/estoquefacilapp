@@ -8,6 +8,14 @@ PER_PAGE_PADRAO = 20
 PER_PAGE_MAXIMO = 100
 
 
+def texto(valor):
+    """Valor do banco como texto no JSON: Decimal sem perder casas, data em ISO."""
+    if valor is None:
+        return None
+
+    return valor.isoformat() if hasattr(valor, "isoformat") else str(valor)
+
+
 class ValidationError(ValueError):
     """Dado inválido enviado pelo cliente.
 

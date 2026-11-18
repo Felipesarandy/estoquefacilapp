@@ -1,5 +1,6 @@
 """Inventário: contagem física de um insumo."""
 from app.extensions import db
+from app.models.audit_log import tornar_imutavel
 
 
 class InventoryCount(db.Model):
@@ -20,5 +21,7 @@ class InventoryCount(db.Model):
         """Negativo = faltou insumo (divergência de inventário); positivo = sobrou."""
         return self.counted_quantity - self.system_quantity
 
+
+tornar_imutavel(InventoryCount)
 
 __all__ = ["InventoryCount"]

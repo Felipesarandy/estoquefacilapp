@@ -1,11 +1,13 @@
-"""Dados iniciais para desenvolvimento e testes.
+"""Dados iniciais para desenvolvimento e demonstração.
 
-Uso:  flask seed
+Uso:  flask seed            (pede confirmação: APAGA os dados)
+      flask seed --force    (sem perguntar; usado por `invoke seed`)
 
 Monta um haras de demonstração com insumos nos quatro níveis de estoque
-(ruptura, critico, atencao e ok) e movimentações espalhadas pelos
-últimos sete dias. Quem mexe no saldo é sempre
-`app.services.stock.registrar_movimentacao`.
+(ruptura, critico, atencao e ok), movimentações espalhadas pelos últimos
+sete dias, uma contagem de inventário com divergência, incidentes e a
+trilha de auditoria. Tudo passa pelos serviços (stock, inventory,
+incidents, audit): o seed não reimplementa nenhuma regra.
 """
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
@@ -13,9 +15,8 @@ from decimal import Decimal
 import click
 
 from app.extensions import db
-from app.models import (
-    Category, InventoryCount, Product, Stable, Supplier, User,
-)
+from app.models import Category, Product, Stable, Supplier, User
+from app.services import audit, incidents, inventory
 from app.services.alerts import fuso, hoje, nivel
 from app.services.stock import registrar_movimentacao
 
@@ -35,8 +36,15 @@ def _quando(dias_atras, hora=8):
 
 
 @click.command("seed")
-def seed_command():
+@click.option("--force", is_flag=True, help="Não pede confirmação antes de apagar os dados.")
+def seed_command(force):
     """Apaga os dados e popula o banco com um haras de exemplo."""
+    if not force:
+        click.confirm(
+            "Isto APAGA todos os dados do banco e cria o haras de exemplo. Continuar?",
+            abort=True,
+        )
+
     # limpa as tabelas (das "filhas" para as "mães"), mantendo a estrutura das migrações
     for table in reversed(db.metadata.sorted_tables):
         db.session.execute(table.delete())
@@ -84,6 +92,18 @@ def seed_command():
                         nutriequi, agro, *produtos])
     db.session.flush()
 
+    # Trilha de auditoria do cadastro: o primeiro admin nasce do seed
+    # (sem autor); o resto foi cadastrado por ele
+    audit.record(None, "create", "user", admin.id, after=audit.snapshot(admin),
+                 stable_id=haras.id)
+    audit.registrar_criacao(admin, "user", tratador)
+    for categoria in (racao, volumoso, suplementos, vitaminas):
+        audit.registrar_criacao(admin, "category", categoria)
+    for fornecedor in (nutriequi, agro):
+        audit.registrar_criacao(admin, "supplier", fornecedor)
+    for produto in produtos:
+        audit.registrar_criacao(admin, "product", produto)
+
     peletizada, extrusada, potros, feno, sal, oleo, vitamina = produtos
 
     def entrada(produto, quantidade, dias_atras, lote=None, validade=None, obs=None, hora=8):
@@ -123,14 +143,26 @@ def seed_command():
     saida(oleo, 2, "avaria", 3, "Galão furado")
     saida(sal, 12, "trato_manual", 2)
     saida(vitamina, 5, "trato_manual", 2, "Fim do lote V0915")   # zera: ruptura
+    #   ^ o serviço de estoque abre sozinho o incidente de ruptura (crítico)
     saida(feno, 4, "trato_manual", 0, hora=18)                   # abaixo do mínimo: critico
 
-    # ------------------------------------------- auditoria (contagem física)
-    contagem = InventoryCount(product=sal, user=admin,
-                              system_quantity=sal.current_stock,
-                              counted_quantity=sal.current_stock - Decimal("1"))
-    db.session.add(contagem)
-    saida(sal, 1, "ajuste", 0, "Ajuste após inventário", usuario=admin)
+    # ------------------------------ inventário com divergência (gestão de ativos)
+    # Contagem física achou 1 kg de sal a menos: o serviço lança a saída de
+    # ajuste e abre o incidente de divergência na mesma transação.
+    inventory.registrar_contagem(admin, sal, sal.current_stock - Decimal("1"),
+                                 note="Contagem semanal do depósito")
+
+    # ------------------------------------------ incidente manual em análise
+    umidade, _ = incidents.abrir_incidente(
+        haras.id,
+        "avaria",
+        "Sacos de ração extrusada com sinais de umidade no depósito 2.",
+        severity="media",
+        product=extrusada,
+        opened_by=tratador,
+    )
+    incidents.atualizar_incidente(umidade, admin, status=incidents.EM_ANALISE,
+                                  assigned_to=admin, atribuir=True)
 
     db.session.commit()
 
@@ -145,3 +177,5 @@ def seed_command():
     for situacao in ("ruptura", "critico", "atencao", "ok"):
         nomes = por_nivel.get(situacao, [])
         click.echo(f"  {situacao:<9} ({len(nomes)}): {', '.join(nomes) or '-'}")
+
+    click.echo(f"  incidentes ativos: {incidents.contar_ativos(haras.id)}")
