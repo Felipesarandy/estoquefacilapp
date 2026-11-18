@@ -1,5 +1,5 @@
 EstoqueFacil - o que mudou (avisos para o grupo)
-Atualizado em 18/11/2026
+Atualizado em 18/11/2026 (versao final)
 
 1. Backend unificado em backend/. A API da pasta estoquefacil-feature-backend
    esta sendo portada para la, adaptada ao haras. A pasta do feature serve so
@@ -32,7 +32,9 @@ Atualizado em 18/11/2026
 
 9. Arquivos do backend agora usam fim de linha LF (antes CRLF).
 
-10. Front-end fica na pasta frontend/ (Vue 3 + Vite + Tailwind). Em desenvolvimento.
+10. Front-end fica na pasta frontend/ (Vue 3 + Vite + Tailwind), pronto: 11 telas
+    (Painel, Produtos, Categorias, Fornecedores, Alertas, Movimentacoes,
+    Registro diario, Inventario, Incidentes, Auditoria e Usuarios) mais o login.
 
 11. Nunca versionar: .env, *.db, .venv/. Use backend/.env.example como base.
 
@@ -78,3 +80,18 @@ Atualizado em 18/11/2026
     - No frontend, o botao Excluir aparece apenas para o admin.
     - Nao ha migracao nova: quem tem o banco local antigo so precisa rodar
       `flask seed --force` (opcional, para recriar os dados de demonstracao).
+
+19. Front-end (frontend/): como rodar e o que saber.
+    - Dois terminais: backend (flask run, porta 5000) e frontend (npm run dev,
+      porta 5173). Copie frontend/.env.example para frontend/.env.
+    - A API nao tem versao na URL: tudo em /api (ex.: /api/products).
+    - Na interface o termo e "Produto" (a API e a documentacao antiga ainda
+      dizem "insumo" em algumas mensagens de erro).
+    - Algumas listas aplicam filtros no navegador porque a API nao os oferece:
+      nivel em Produtos, gravidade/periodo/"nao fechados" em Incidentes,
+      divergencia em Inventario e busca por texto em Usuarios. Nesses casos a
+      tela busca todas as paginas e pagina localmente.
+    - Token JWT fica no localStorage (chave estoquefacil_token). Se expirar,
+      aparece o aviso "Sua sessao expirou" e volta para o login.
+    - A pagina /_ui (catalogo de componentes) so existe em npm run dev.
+    - Resultado final dos testes do backend: 313 testes, 37 rotas.

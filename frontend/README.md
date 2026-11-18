@@ -1,5 +1,29 @@
-# Vue 3 + Vite
+# EstoqueFácil — frontend
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Interface em Vue 3 (Composition API, `<script setup>`), Vite, Tailwind CSS v4, Pinia, Vue Router, Axios e Chart.js.
+O guia completo (como rodar backend e frontend juntos) está no [README da raiz](../README.md).
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+```bash
+npm install
+cp .env.example .env     # Windows: copy .env.example .env
+npm run dev              # http://localhost:5173
+npm run build            # build de produção em dist/
+```
+
+`VITE_API_URL` (em `.env`) aponta para a API; o padrão é `http://localhost:5000/api`.
+
+## Estrutura de `src/`
+
+| Pasta | Conteúdo |
+|---|---|
+| `api/` | Um módulo por recurso da API; `http.js` tem o Axios, o token JWT e a conversão de erros (`ApiError`) |
+| `stores/` | Pinia: `auth` (sessão), `toast` (avisos) |
+| `router/` | Rotas com carregamento sob demanda e guards (`requiresAuth`, `requiresAdmin`) |
+| `layouts/` | `AuthLayout` (login) e `AppLayout` (menu lateral + topo) |
+| `views/` | Uma tela por rota |
+| `components/ui/` | Componentes genéricos (botão, campos, modal, tabela, paginação...) |
+| `components/domain/` | Componentes do negócio (formulários, selo de nível, gráfico...) |
+| `composables/` | `useApiForm`, `useAsyncBlock`, `useCrudList`, `usePagination` |
+| `utils/` | Formatação pt-BR, rótulos e cores (`constants.js`), CSV, auditoria |
+
+A rota `/_ui` (catálogo de componentes) só existe em desenvolvimento (`npm run dev`).
