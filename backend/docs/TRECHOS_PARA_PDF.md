@@ -390,4 +390,4 @@ def test_duas_saidas_a_segunda_e_409(client, produto, admin_headers):
     assert detalhe["current_stock"] == "4.000"
 ```
 
-Teste de API com o cliente do Flask: duas saídas de 6 sobre um saldo de 10. A primeira passa (201) e a segunda recebe 409, e o saldo continua consistente em 4. É um dos 302 testes executados com `pytest`.
+Teste de API com o cliente do Flask: duas saídas de 6 sobre um saldo de 10. A primeira passa (201) e a segunda recebe 409, e o saldo continua consistente em 4. É um dos 306 testes executados com `pytest`.

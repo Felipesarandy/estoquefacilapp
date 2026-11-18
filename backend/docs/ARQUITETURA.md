@@ -124,7 +124,7 @@ python-dotenv via Flask CLI). Modelo comentado em `.env.example`:
 
 ## Testes
 
-302 testes com pytest + pytest-flask, todos com banco em memória criado e
+306 testes com pytest + pytest-flask, todos com banco em memória criado e
 destruído a cada teste (`tests/conftest.py`):
 
 | Pasta | O que cobre |
@@ -145,7 +145,7 @@ mínimo e consumo controlados).
 | 2 | Módulos, blueprints e rotas | `app/api/__init__.py` + um blueprint por recurso em `app/api/*.py` |
 | 3 | Formulários e validação no servidor | `app/schemas/common.py` (helpers, `ValidationError`) e `app/schemas/*.py`; handler 422/400 em `app/api/errors.py` |
 | 4 | Interface | front-end Vue 3 em `front-end/` (fora deste backend); a API expõe `/api/meta` para os formulários |
-| 5 | Testes automatizados | `tests/` (302 testes, `pytest`) |
+| 5 | Testes automatizados | `tests/` (306 testes, `pytest`) |
 | 6 | ORM e modelagem | `app/models/*.py`, `migrations/versions/*.py`, [ER.md](ER.md) |
 | 7 | Qualidade | camadas `api/schemas/services/models`; `.env.example` + `config.py`; logging em `create_app`; erros em `app/api/errors.py`; `tasks.py`; documentação em `docs/` |
 

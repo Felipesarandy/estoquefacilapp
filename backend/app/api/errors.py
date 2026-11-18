@@ -51,7 +51,10 @@ def register_error_handlers(app):
 
     @app.errorhandler(HTTPException)
     def _http_exception(e):
-        return api_error(e.code, e.description or MENSAGENS.get(e.code))
+        # Sem mensagem própria (texto padrão do Werkzeug, em inglês) -> usa a nossa
+        padrao = e.description is None or e.description == type(e).description
+        mensagem = MENSAGENS.get(e.code) if padrao else e.description
+        return api_error(e.code, mensagem or e.description)
 
     @app.errorhandler(Exception)
     def _erro_inesperado(e):

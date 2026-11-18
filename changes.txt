@@ -9,7 +9,7 @@ Atualizado em 17/11/2026
    (Store, funcionario) NAO sera usado.
 
 3. models.py virou um pacote: backend/app/models/ (um arquivo por tabela).
-   O esquema e a migration nao mudaram. Os imports continuam iguais:
+   Os imports continuam iguais:
    from app.models import Product
 
 4. API REST em /api (ex.: /api/products). Erros sempre em JSON:
@@ -23,9 +23,9 @@ Atualizado em 17/11/2026
    (cobertura <= 5 dias). A constante MOTIVOS_QUEBRA foi renomeada para
    MOTIVOS_PERDA (avaria, vencimento, furto continuam como motivos de saida).
 
-7. Migrations: existe so a d2b9e292d1e5. Mudancas no banco entram em novas
-   migrations por cima, e so UMA pessoa gera migrations. Avisem antes de
-   mexer nos models.
+7. Migrations: d2b9e292d1e5 (modelo inicial) -> 84631ed584e8 (auditoria e
+   incidentes). Mudancas no banco entram em novas migrations por cima, e so
+   UMA pessoa gera migrations. Avisem antes de mexer nos models.
 
 8. Banco local pode ser recriado a qualquer hora (dados sao ficticios):
    apagar backend/instance/dev.db, flask db upgrade, flask seed.
@@ -52,3 +52,16 @@ Atualizado em 17/11/2026
 
 16. Confirmar com o professor: so o modelo de auditoria ITIL. O formato do
     registro diario de entradas/saidas e a regra dos 5 dias sao decisao do grupo.
+
+17. Revisao antes da apresentacao (18/11/2026):
+    - Horarios (created_at, closed_at...) agora saem no fuso do haras com
+      offset, ex.: "2026-11-17T23:03:56-03:00". Antes saiam em UTC sem fuso
+      e o front mostraria a hora 3h adiantada. O banco continua em UTC.
+    - Erros 404/405 padrao do Flask agora vem em portugues.
+    - Seed: "Racao de potros" passou a consumir 9 kg/dia (antes 30). Assim o
+      insumo em "atencao" dura mais (~4,4 dias) que os "critico" e a ordem
+      dos alertas faz sentido na apresentacao.
+    - .env.example da raiz agora e igual ao backend/.env.example (tinha
+      ficado sem JWT_SECRET_KEY e gerava aviso de chave curta no login).
+    - Ambiente virtual padronizado como .venv (README da raiz atualizado).
+    - +4 testes (306 no total).

@@ -4,122 +4,68 @@ Controle de estoque dos insumos de um haras que usa o alimentador automático **
 
 - Entradas: `compra`, `doacao`, `ajuste` (com lote e validade opcionais)
 - Saídas: `abastecimento_alimentador`, `trato_manual`, `avaria`, `vencimento`, `furto`, `ajuste`
-- Alerta de estoque mínimo, capital imobilizado e **dias de cobertura** (saldo ÷ consumo diário)
-- Inventário (contagem física x sistema)
+- Alertas de quebra de estoque (`ruptura`, `critico`, `atencao`, `ok`), dias de cobertura e capital imobilizado
+- Inventário (contagem física x sistema), gestão de incidentes e trilha de auditoria (ITIL)
 
-Monorepo com duas partes separadas:
+## Estrutura do repositório
 
-| Pasta | O que é |
-|---|---|
-| `backend/` | API REST em Flask + SQLAlchemy (SQLite em desenvolvimento) |
-| `front-end/` | Interface em Vue 3 (ainda não iniciado) |
+| Pasta | O que é | Documentação |
+|---|---|---|
+| `backend/` | API REST em Flask + SQLAlchemy + JWT (SQLite em desenvolvimento) | [backend/README.md](backend/README.md) e [backend/docs/](backend/docs/) |
+| `front-end/` | Interface em Vue 3 (em desenvolvimento), consome a API em `http://localhost:5000/api` | — |
 
-## Configuração
+O que mudou e os avisos para o grupo ficam em [changes.txt](changes.txt).
 
-O `.env` (SECRET_KEY e DATABASE_URL) fica na raiz do repositório e não vai pro Git. Crie a partir do modelo:
+## Rodando o backend
 
-```bash
-copy .env.example .env
-```
+No terminal do VS Code (`Ctrl + '`), dentro de `backend/`:
 
-O Flask o encontra subindo as pastas pais a partir de `backend/`.
-
-## Backend
-
-Todos os comandos abaixo rodam de dentro de `backend/`.
-
-### 1. Primeira vez (no terminal do VS Code, `Ctrl + '`)
+### 1. Primeira vez
 
 ```bash
 cd backend
-python -m venv venv
-venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -e ".[dev,test]"
+copy .env.example .env
 ```
 
-Depois: `Ctrl+Shift+P` → **Python: Select Interpreter** → escolha `backend\venv`.
+Depois: `Ctrl+Shift+P` → **Python: Select Interpreter** → escolha `backend\.venv`.
 
-### 2. Criar o banco
+O `.env` nunca vai para o Git. Ele pode ficar em `backend/` ou na raiz do repositório (o `.env.example` é o mesmo nos dois lugares).
+
+### 2. Banco e dados de exemplo
 
 ```bash
-flask db upgrade                   # aplica as migrations já versionadas em migrations/
-flask seed                         # dados de exemplo (APAGA e recria os dados do banco)
+python -m flask db upgrade        # aplica as migrations versionadas
+python -m flask seed --force      # APAGA os dados e cria o haras de exemplo
 ```
 
 O banco SQLite fica em `backend/instance/dev.db` (abra com a extensão **SQLite Viewer**).
 
-Usuários de exemplo:
-- `admin@haras.com` / `admin123` (admin)
-- `tratador@haras.com` / `trat123` (tratador)
+| E-mail | Senha | Papel |
+|---|---|---|
+| `admin@haras.com` | `admin123` | admin |
+| `tratador@haras.com` | `trat123` | tratador |
 
-### 3. Rodar a API e os testes
-
-```bash
-flask run
-pytest -v
-```
-
-### 4. Quando alterar o `models.py`
-
-Só depois de mudar o `models.py`, gere uma nova migration (não edite uma já aplicada):
+### 3. API e testes
 
 ```bash
-flask db migrate -m "descreva a mudança"
-flask db upgrade
+python -m flask run               # http://localhost:5000/api/health
+python -m pytest                  # testes automatizados, banco em memória
 ```
 
-### Atalhos com invoke
+Usar `python -m flask` e `python -m pytest` evita erro de caminho quando a pasta do projeto muda de lugar.
 
-| Comando | Faz |
-|---|---|
-| `invoke install` | instala dependências |
-| `invoke migrate --msg "texto"` | gera migração |
-| `invoke upgrade` | aplica migrações |
-| `invoke seed` | popula o banco |
-| `invoke test` | roda os testes |
+### 4. Quando alterar os models
 
-### Estrutura
+Só uma pessoa do grupo gera migrations. Depois de mudar algo em `backend/app/models/`, gere uma nova (nunca edite uma já aplicada):
 
-```
-estoquefacilapp/
-├── .env                # SECRET_KEY e DATABASE_URL (não vai pro Git)
-├── .env.example
-├── README.md
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py     # create_app()
-│   │   ├── extensions.py   # db e migrate
-│   │   ├── models.py       # tabelas do banco
-│   │   └── seed.py         # comando "flask seed"
-│   ├── migrations/         # migrations do Flask-Migrate (versionadas)
-│   ├── instance/           # banco SQLite local, dev.db (não vai pro Git)
-│   ├── tests/
-│   │   ├── conftest.py     # fixtures do pytest
-│   │   └── test_models.py  # testes do banco
-│   ├── config.py           # Dev / Testing / Production
-│   ├── .flaskenv           # FLASK_APP=app
-│   ├── pyproject.toml
-│   └── tasks.py
-└── front-end/
+```bash
+python -m flask db migrate -m "descreva a mudança"
+python -m flask db upgrade
 ```
 
 ## Front-end
 
-Ainda não iniciado.
-
-## Estrutura do repositório e como rodar
-
-| Pasta | O que é | Como rodar |
-|---|---|---|
-| `backend/` | API REST (Flask, SQLAlchemy, JWT): catálogo, movimentações, registro diário, alertas de quebra de estoque, inventário, incidentes e auditoria ITIL | instruções completas em [backend/README.md](backend/README.md); documentação em [backend/docs/](backend/docs/) |
-| `front-end/` | Interface em Vue 3 (em desenvolvimento) | consome a API em `http://localhost:5000/api` |
-
-Resumo do backend (dentro de `backend/`, com o ambiente virtual ativo):
-
-```bash
-pip install -e ".[dev,test]"
-flask db upgrade
-flask seed --force
-flask run
-pytest
-```
+Em desenvolvimento (Vue 3).

@@ -74,7 +74,7 @@ def seed_command(force):
                 min_stock=Decimal("50"), daily_consumption=Decimal("8")),
         Product(stable=haras, category=racao, supplier=nutriequi, name="Ração de potros (crescimento)",
                 code="EQ003", unit="kg", cost_price=Decimal("4.50"),
-                min_stock=Decimal("20"), max_stock=Decimal("400"), daily_consumption=Decimal("30")),
+                min_stock=Decimal("20"), max_stock=Decimal("400"), daily_consumption=Decimal("9")),
         Product(stable=haras, category=volumoso, supplier=agro, name="Feno de tifton (fardo)",
                 code="EQ100", unit="un", cost_price=Decimal("35.00"),
                 min_stock=Decimal("10"), daily_consumption=Decimal("2")),
@@ -135,7 +135,7 @@ def seed_command(force):
 
     # Saídas pontuais que deixam cada insumo em um nível diferente:
     # vitamínico zera (ruptura), peletizada e feno ficam sob o mínimo (critico),
-    # potros fica com ~1,3 dia de cobertura (atencao) e o resto segue em ok.
+    # potros fica com ~4,4 dias de cobertura (atencao) e o resto segue em ok.
     saida(peletizada, 30, "trato_manual", 1, "Baias de recuperação")
     saida(potros, 200, "abastecimento_alimentador", 3)
     saida(potros, 60, "trato_manual", 1)

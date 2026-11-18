@@ -73,7 +73,7 @@ flask run                 # http://localhost:5000/api/health
 ## 5. Testes
 
 ```bash
-pytest                    # 302 testes, banco em memória
+pytest                    # 306 testes, banco em memória
 pytest -v tests/api       # só os testes de API
 ```
 

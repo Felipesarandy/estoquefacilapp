@@ -17,8 +17,12 @@ Base: `http://localhost:5000/api` · formato: JSON (UTF-8) · 36 rotas
   `quantity`...); **rótulos de resumo** em português (`entradas`, `saidas`,
   `por_nivel`...).
 - **Números decimais** saem como texto (`"85.000"`) para não perder casas;
-  datas em ISO 8601. Horários (`created_at`) são gravados em UTC; o "dia" do
-  registro diário usa o fuso `TIMEZONE` (padrão `America/Sao_Paulo`).
+  datas em ISO 8601. Horários (`created_at`, `closed_at`...) são gravados em
+  UTC e saem no fuso `TIMEZONE` (padrão `America/Sao_Paulo`) **com offset**,
+  ex.: `"2026-11-17T22:27:25-03:00"` (o `new Date()` do front já converte
+  certo). O "dia" do registro diário também usa esse fuso. Exceção: as fotos
+  `before_json`/`after_json` da auditoria guardam os valores como estavam no
+  banco (UTC, sem offset).
 
 ### Códigos de status
 
@@ -97,7 +101,7 @@ Exemplo `200` do login:
   "token_type": "Bearer",
   "expires_in": 3600,
   "user": {"id": 1, "name": "Felipe Admin", "email": "admin@haras.com", "role": "admin",
-           "active": true, "stable_id": 1, "created_at": "2026-11-18T01:27:25"}
+           "active": true, "stable_id": 1, "created_at": "2026-11-17T22:27:25-03:00"}
 }
 ```
 
@@ -187,7 +191,7 @@ Exemplo `201`:
   "movement": {"id": 39, "product_id": 3, "user_id": 1, "type": "entrada", "reason": "compra",
                "quantity": "50.000", "unit_cost": "5.80", "total_cost": "290.00000",
                "batch": "L2701B", "expiration_date": "2027-06-30", "note": null,
-               "created_at": "2026-11-18T01:27:43"},
+               "created_at": "2026-11-17T22:27:43-03:00"},
   "current_stock": "135.000",
   "nivel": "ok",
   "is_low_stock": false
@@ -260,7 +264,7 @@ com severidade proporcional. Imutável (sem `PATCH`/`PUT`/`DELETE`).
 ```json
 {
   "count": {"id": 2, "product_id": 6, "user_id": 1, "system_quantity": "12.000",
-            "counted_quantity": "10.000", "difference": "-2.000", "created_at": "2026-11-18T01:27:25"},
+            "counted_quantity": "10.000", "difference": "-2.000", "created_at": "2026-11-17T22:27:25-03:00"},
   "difference": "-2.000",
   "adjustment": {"id": 39, "type": "saida", "reason": "ajuste", "quantity": "2.000",
                  "note": "Ajuste após inventário #2: Contagem mensal", "...": "..."},
@@ -315,7 +319,7 @@ supplier, product, movement, inventory_count, incident`. Escrita pela API →
   "id": 63, "stable_id": 1, "user_id": 1, "action": "incident", "entity": "incident", "entity_id": 3,
   "before_json": {"status": "em_analise", "resolution": null, "...": "..."},
   "after_json": {"status": "resolvido", "resolution": "Sacos descartados e depósito ventilado", "...": "..."},
-  "ip": "127.0.0.1", "created_at": "2026-11-18T01:27:25"
+  "ip": "127.0.0.1", "created_at": "2026-11-17T22:27:25-03:00"
 }
 ```
 

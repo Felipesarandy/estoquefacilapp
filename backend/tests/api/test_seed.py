@@ -123,3 +123,13 @@ def test_seed_tem_trilha_de_auditoria(client, db, headers):
     acoes = {log.action for log in db.session.query(AuditLog).all()}
 
     assert {"create", "movement", "inventory", "incident", "login"} <= acoes
+
+
+def test_atencao_nao_e_mais_urgente_que_os_criticos(client, headers):
+    """No seed, o insumo em "atencao" dura mais que os "critico" (ordem faz sentido)."""
+    alertas = client.get("/api/alerts", headers=headers).get_json()["items"]
+    criticos = [float(a["cobertura_dias"]) for a in alertas if a["nivel"] == "critico"]
+    atencao = [float(a["cobertura_dias"]) for a in alertas if a["nivel"] == "atencao"]
+
+    assert criticos and atencao
+    assert min(atencao) >= max(criticos)

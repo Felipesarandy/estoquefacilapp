@@ -1,17 +1,44 @@
 """Helpers de validação compartilhados pelos schemas (campos, tipos, erros 422)."""
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from flask import request
+from flask import current_app, has_app_context, request
 
 PER_PAGE_PADRAO = 20
 PER_PAGE_MAXIMO = 100
+
+
+def _fuso_do_haras():
+    """Fuso configurado (TIMEZONE); UTC fora de uma requisição ou se não existir."""
+    if not has_app_context():
+        return timezone.utc
+    try:
+        return ZoneInfo(current_app.config.get("TIMEZONE", "America/Sao_Paulo"))
+    except ZoneInfoNotFoundError:
+        return timezone.utc
+
+
+def data_hora(valor):
+    """Data e hora do banco (gravada em UTC, sem fuso) no fuso do haras, com offset.
+
+    Ex.: 2026-11-18 02:03:56 (UTC) -> "2026-11-17T23:03:56-03:00".
+    Com o offset, o front-end (new Date(...)) mostra o horário certo.
+    """
+    if valor is None:
+        return None
+    if valor.tzinfo is None:
+        valor = valor.replace(tzinfo=timezone.utc)
+    return valor.astimezone(_fuso_do_haras()).isoformat()
 
 
 def texto(valor):
     """Valor do banco como texto no JSON: Decimal sem perder casas, data em ISO."""
     if valor is None:
         return None
+
+    if isinstance(valor, datetime):
+        return data_hora(valor)
 
     return valor.isoformat() if hasattr(valor, "isoformat") else str(valor)
 

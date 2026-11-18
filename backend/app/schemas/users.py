@@ -5,6 +5,7 @@ from app.schemas.common import (
     boolean_field,
     choice_field,
     required_string,
+    texto,
 )
 
 SENHA_MINIMA = 8
@@ -20,7 +21,7 @@ def serialize_user(user):
         "role": user.role,
         "active": user.active,
         "stable_id": user.stable_id,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "created_at": texto(user.created_at),
     }
 
 
