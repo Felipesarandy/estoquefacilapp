@@ -1,6 +1,6 @@
 <script setup>
 defineProps({
-  tone: { type: String, default: 'slate' }, // slate | emerald | amber | orange | red | sky | indigo
+  tone: { type: String, default: 'slate' }, // slate | emerald | amber | orange | red | rose | sky | indigo
   customClass: { type: String, default: '' }, // sobrescreve o tom (ex.: classes de utils/constants.js)
 })
 
@@ -9,6 +9,7 @@ const tones = {
   emerald: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20',
   amber: 'bg-amber-100 text-amber-800 ring-amber-600/20',
   orange: 'bg-orange-100 text-orange-800 ring-orange-600/20',
+  rose: 'bg-rose-100 text-rose-800 ring-rose-600/20',
   red: 'bg-red-100 text-red-800 ring-red-600/20',
   sky: 'bg-sky-100 text-sky-800 ring-sky-600/20',
   indigo: 'bg-indigo-100 text-indigo-800 ring-indigo-600/20',

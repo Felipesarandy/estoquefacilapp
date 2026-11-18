@@ -43,3 +43,21 @@ export function formatDateTime(iso) {
     timeStyle: 'short',
   })
 }
+
+/** Data de hoje (YYYY-MM-DD) no fuso America/Sao_Paulo. */
+export function todayISO() {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: TZ })
+}
+
+/** Soma dias a uma data YYYY-MM-DD (negativo subtrai). */
+export function addDays(iso, days) {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/** "2026-11-17" -> "17/11" */
+export function formatDayMonth(iso) {
+  const [, month, day] = iso.split('-')
+  return `${day}/${month}`
+}

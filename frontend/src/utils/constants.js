@@ -1,10 +1,10 @@
 // Rótulos e classes Tailwind (completas, para o Tailwind detectar) dos domínios da API.
 
 export const STOCK_LEVELS = {
-  ruptura: { label: 'Ruptura', classes: 'bg-red-100 text-red-800 ring-red-600/20' },
-  critico: { label: 'Crítico', classes: 'bg-orange-100 text-orange-800 ring-orange-600/20' },
-  atencao: { label: 'Atenção', classes: 'bg-amber-100 text-amber-800 ring-amber-600/20' },
-  ok: { label: 'Ok', classes: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20' },
+  ruptura: { label: 'Ruptura', tone: 'red', classes: 'bg-red-100 text-red-800 ring-red-600/20' },
+  critico: { label: 'Crítico', tone: 'orange', classes: 'bg-orange-100 text-orange-800 ring-orange-600/20' },
+  atencao: { label: 'Atenção', tone: 'amber', classes: 'bg-amber-100 text-amber-800 ring-amber-600/20' },
+  ok: { label: 'Ok', tone: 'emerald', classes: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20' },
 }
 
 export const INCIDENT_STATUS = {
