@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-[calc(100vh-2rem)] items-center justify-center bg-slate-100 px-4 py-8">
+  <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
     <div class="w-full max-w-md">
       <div class="mb-6 text-center">
         <h1 class="text-3xl font-bold text-emerald-700">EstoqueFácil</h1>

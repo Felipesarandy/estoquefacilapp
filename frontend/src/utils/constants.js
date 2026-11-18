@@ -59,3 +59,5 @@ export const EXIT_REASONS = [
 ]
 
 export const UNITS = ['kg', 'g', 'sc', 'l', 'ml', 'un']
+
+export const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Entre novamente.'

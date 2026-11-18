@@ -5,6 +5,8 @@ import App from './App.vue'
 import router from './router'
 import { setUnauthorizedHandler } from './api/http'
 import { useAuthStore } from './stores/auth'
+import { useToastStore } from './stores/toast'
+import { SESSION_EXPIRED_MESSAGE } from './utils/constants'
 
 const app = createApp(App)
 app.use(createPinia())
@@ -13,6 +15,7 @@ app.use(router)
 // 401 fora do login: encerra a sessão e volta ao login guardando a rota atual.
 setUnauthorizedHandler(() => {
   useAuthStore().logout()
+  useToastStore().warning(SESSION_EXPIRED_MESSAGE)
   const current = router.currentRoute.value
   // Sem nome = navegação inicial ainda em curso; o guard do router cuida do redirecionamento.
   if (!current.name || current.name === 'login') return

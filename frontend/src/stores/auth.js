@@ -2,6 +2,8 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import * as authApi from '../api/auth'
 import { clearToken, getToken, setToken } from '../api/http'
+import { SESSION_EXPIRED_MESSAGE } from '../utils/constants'
+import { useToastStore } from './toast'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(getToken())
@@ -39,8 +41,10 @@ export const useAuthStore = defineStore('auth', () => {
         if (!token.value) return
         try {
           await fetchMe()
-        } catch {
+        } catch (err) {
           clearSession()
+          // Erro de rede não é sessão expirada.
+          if (err?.status === 401) useToastStore().warning(SESSION_EXPIRED_MESSAGE)
         }
       })()
     }
