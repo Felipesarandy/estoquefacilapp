@@ -66,3 +66,16 @@ export function formatDayMonth(iso) {
 export function formatTime(date = new Date()) {
   return date.toLocaleTimeString('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
 }
+
+/** "2026-11-17" -> "17/11/2026 (ter)" (dia da semana abreviado). */
+export function formatDateWeekday(iso) {
+  const date = toDate(iso)
+  if (!date) return '—'
+  const weekday = date.toLocaleDateString('pt-BR', { timeZone: TZ, weekday: 'short' }).replace('.', '')
+  return `${formatDate(iso)} (${weekday})`
+}
+
+/** Dias entre duas datas YYYY-MM-DD, inclusive as duas pontas. */
+export function daysBetween(fromIso, toIso) {
+  return Math.round((new Date(`${toIso}T00:00:00Z`) - new Date(`${fromIso}T00:00:00Z`)) / 86400000) + 1
+}
